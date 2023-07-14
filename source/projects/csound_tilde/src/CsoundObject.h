@@ -92,8 +92,8 @@ public:
 	volatile bool m_performanceFinished; // If true, Csound performance has finished.
 	
 	short m_defaultPathID;     // A Max path ID corresponding to m_defaultPath.
-	string m_defaultPath;      // Absolute path of the parent patch.
-	string m_path;             // User supplied current directory for relative paths.
+	std::string m_defaultPath;      // Absolute path of the parent patch.
+	std::string m_path;             // User supplied current directory for relative paths.
 
 	Args m_args;               // Maintains the csound argument list.
 	

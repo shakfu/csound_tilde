@@ -33,13 +33,13 @@
 using boost::ptr_multiset;
 using namespace dvx;
 
-ControlEvent::ControlEvent(int time, const string &name, MYFLT value) :
+ControlEvent::ControlEvent(int time, const std::string &name, MYFLT value) :
 	Event(EVENT_TYPE_CONTROL, time), m_name(name), m_value(value)
 {}
 
 #ifdef _USE_BOOST_SERIALIZATION
 ControlEvent::ControlEvent(ptree &pt) :
-		Event(EVENT_TYPE_CONTROL, pt.get<int>("time")), m_name(pt.get<string>("name")), m_value(pt.get<MYFLT>("value"))
+		Event(EVENT_TYPE_CONTROL, pt.get<int>("time")), m_name(pt.get<std::string>("name")), m_value(pt.get<MYFLT>("value"))
 	{}
 
 void ControlEvent::save(ptree &pt) const
@@ -59,7 +59,7 @@ CsoundEvent::CsoundEvent(int time, const char *evt) :
 
 #ifdef _USE_BOOST_SERIALIZATION
 CsoundEvent::CsoundEvent(ptree &pt) :
-	Event(EVENT_TYPE_CSOUND, pt.get<int>("time")), m_event(pt.get<string>("e"))
+	Event(EVENT_TYPE_CSOUND, pt.get<int>("time")), m_event(pt.get<std::string>("e"))
 {}
 
 void CsoundEvent::save(ptree &pt) const
@@ -71,7 +71,7 @@ void CsoundEvent::save(ptree &pt) const
 }
 #endif
 
-MidiEvent::MidiEvent(int time, const byte *buf, int bytes) :
+MidiEvent::MidiEvent(int time, const csbyte *buf, int bytes) :
 	Event(EVENT_TYPE_MIDI, time), m_size(bytes)
 {
 	assert(m_size<=MAX_MIDI_MESSAGE_SIZE);
@@ -82,9 +82,9 @@ MidiEvent::MidiEvent(int time, const byte *buf, int bytes) :
 MidiEvent::MidiEvent(ptree &pt) :
 	Event(EVENT_TYPE_MIDI, pt.get<int>("time")), m_size(pt.get<int>("size"))
 {
-	string byte_str;
+	std::string byte_str;
 	std::vector<int> v(0); // parse_integers appends values, so vector must be empty.
-	byte_str = pt.get<string>("bytes");
+	byte_str = pt.get<std::string>("bytes");
 	Parser::parse_integers(byte_str.begin(), byte_str.end(), v);
 	for(int i=0; i<m_size; i++)
 		m_buffer[i] = v[i];
@@ -97,22 +97,22 @@ void MidiEvent::save(ptree &pt) const
 	t.put("time", m_time);
 	t.put("size", m_size);
 
-	string byte_str;
+	std::string byte_str;
 	std::vector<int> v(MAX_MIDI_MESSAGE_SIZE);
 	for(int i=0; i<m_size; i++) v[i] = m_buffer[i];
-	back_insert_iterator<string> sink(byte_str);
+	std::back_insert_iterator<std::string> sink(byte_str);
 	Parser::generate_integers(sink, v);
 	t.put("bytes", byte_str);
 }
 #endif
 
-StringEvent::StringEvent(int time, const string &name, const char *value) :
+StringEvent::StringEvent(int time, const std::string &name, const char *value) :
 	Event(EVENT_TYPE_STRING, time), m_name(name), m_string(value)
 {}
 
 #ifdef _USE_BOOST_SERIALIZATION
 StringEvent::StringEvent(ptree &pt) :
-	Event(EVENT_TYPE_STRING, pt.get<int>("time")), m_name(pt.get<string>("name")), m_string(pt.get<string>("string"))
+	Event(EVENT_TYPE_STRING, pt.get<int>("time")), m_name(pt.get<std::string>("name")), m_string(pt.get<std::string>("string"))
 {}
 
 void StringEvent::save(ptree &pt) const
@@ -144,7 +144,7 @@ Sequencer::Sequencer(t_object *o, CSOUND *c, ChannelGroup *g, MidiBuffer *m) :
 	SetBPM(DEFAULT_BPM);
 	for(int i=0; i<16; i++)
 		for(int j=0; j<128; j++)
-			m_ctrlMatrix[i][j] = (byte) 128;
+			m_ctrlMatrix[i][j] = (csbyte) 128;
 	memset(m_activeNoteMatrix, 0, MIDI_MATRIX_SIZE);
 }
 
@@ -252,8 +252,8 @@ void Sequencer::StartRecording()
 {
 	ChannelGroup *c = m_inChannelGroup;
 	ChannelObject *co = NULL;
-	byte ch, ctrl;
-	byte buf[3];
+	csbyte ch, ctrl;
+	csbyte buf[3];
 
 	if(m_read_write_thread_exists)
 	{
@@ -311,8 +311,8 @@ void Sequencer::StopRecording()
 	MidiEvent *me = NULL;
 	bool firstEventFound = false;
 	int firstEventTime = 1;
-	byte activeNoteMatrix[16][128];
-	byte status = 0, chan, pitch, vel, b[3];
+	csbyte activeNoteMatrix[16][128];
+	csbyte status = 0, chan, pitch, vel, b[3];
 
 	m_recording = false;
 	memset(activeNoteMatrix, 0, MIDI_MATRIX_SIZE);
@@ -372,8 +372,8 @@ void Sequencer::StopRecording()
 		{
 			if(activeNoteMatrix[i][j] > 0)
 			{
-				b[0] = (byte)i | 0x80;
-				b[1] = (byte)j;
+				b[0] = (csbyte)i | 0x80;
+				b[1] = (csbyte)j;
 				b[2] = 0;
 				AddMIDIEvent(b, 3, false); // Don't lock; using scoped lock above.
 			}
@@ -402,7 +402,7 @@ void Sequencer::StartPlaying()
 void Sequencer::StopPlaying()
 {
 	int i, j;
-	byte b[3];
+	csbyte b[3];
 	ScopedLock k(m_lock);
 
 	m_cur_event = m_events.begin();
@@ -416,8 +416,8 @@ void Sequencer::StopPlaying()
 		{
 			if(m_activeNoteMatrix[i][j] > 0)
 			{
-				b[0] = (byte)i | 0x80;
-				b[1] = (byte)j;
+				b[0] = (csbyte)i | 0x80;
+				b[1] = (csbyte)j;
 				b[2] = 0;
 				m_midiInputBuffer->EnqueueBuffer(b, 3);
 			}
@@ -446,7 +446,7 @@ bool Sequencer::AddCsoundEvent(char *buf, bool lock)
 	return true;
 }
 
-bool Sequencer::AddControlEvent(const string &name, MYFLT value, bool lock)
+bool Sequencer::AddControlEvent(const std::string &name, MYFLT value, bool lock)
 {
 	ScopedLock k(m_lock,lock);
 
@@ -459,7 +459,7 @@ bool Sequencer::AddControlEvent(const string &name, MYFLT value, bool lock)
 	return true;
 }
 
-bool Sequencer::AddStringEvent(const string &name, const char *str, bool lock)
+bool Sequencer::AddStringEvent(const std::string &name, const char *str, bool lock)
 {
 	ScopedLock k(m_lock,lock);
 
@@ -472,7 +472,7 @@ bool Sequencer::AddStringEvent(const string &name, const char *str, bool lock)
 	return true;
 }
 
-bool Sequencer::AddMIDIEvent(byte *buf, int nBytes, bool lock)
+bool Sequencer::AddMIDIEvent(csbyte *buf, int nBytes, bool lock)
 {
 	ScopedLock k(m_lock,lock);
 
@@ -487,7 +487,7 @@ bool Sequencer::AddMIDIEvent(byte *buf, int nBytes, bool lock)
 
 void Sequencer::ProcessEvents()
 {
-	byte status, chan, pitch, vel;
+	csbyte status, chan, pitch, vel;
 	ScopedLock k(m_lock);
 
 	if(m_cur_event == m_events.end())
@@ -552,18 +552,18 @@ void Sequencer::ProcessEvents()
 }
 
 
-void Sequencer::Write(const string & file)
+void Sequencer::Write(const std::string & file)
 {
 	int file_type = FILE_BINARY;
-	string file_lowercase = file;
+	std::string file_lowercase = file;
 
 	to_lower(file_lowercase);
 
 	if(m_playing) StopPlaying();
 	if(m_recording) StopRecording();
-	if(file_lowercase.find(".json") != string::npos)
+	if(file_lowercase.find(".json") != std::string::npos)
 		file_type = FILE_JSON;
-	else if(file_lowercase.find(".xml") != string::npos)
+	else if(file_lowercase.find(".xml") != std::string::npos)
 		file_type = FILE_XML;
 
 	if(FILE_BINARY == file_type)
@@ -601,18 +601,18 @@ void Sequencer::Write(const string & file)
 	#endif
 }
 
-void Sequencer::Read(const string & file)
+void Sequencer::Read(const std::string & file)
 {
 	int file_type = FILE_BINARY;
-	string file_lowercase = file;
+	std::string file_lowercase = file;
 
 	to_lower(file_lowercase);
 
 	if(m_playing) StopPlaying();
 	if(m_recording) StopRecording();
-	if(file_lowercase.find(".json") != string::npos)
+	if(file_lowercase.find(".json") != std::string::npos)
 		file_type = FILE_JSON;
-	else if(file_lowercase.find(".xml") != string::npos)
+	else if(file_lowercase.find(".xml") != std::string::npos)
 		file_type = FILE_XML;
 
 	if(FILE_BINARY == file_type)
@@ -660,10 +660,10 @@ void Sequencer::Read(const string & file)
 	#endif
 }
 
-void Sequencer::ReadBinary(const string & file)
+void Sequencer::ReadBinary(const std::string & file)
 {
 	FILE *fp = NULL;
-	byte *buffer = NULL, *bytePtr = NULL;
+	csbyte *buffer = NULL, *bytePtr = NULL;
 	int fileSize = 0, numEvents = 0, result;
 	int i, type, time, len, data2_size, magic;
 	char buf[MAX_EVENT_MESSAGE_SIZE];
@@ -672,7 +672,7 @@ void Sequencer::ReadBinary(const string & file)
 	int magic_number = FILE_MAGIC_NUMBER;
 	int magic_number_reverse = magic_number;
 
-	reverseBytes((byte*)&magic_number_reverse, sizeof(int));
+	reverseBytes((csbyte*)&magic_number_reverse, sizeof(int));
 
 	if(m_playing) StopPlaying();
 	if(m_recording) StopRecording();
@@ -693,7 +693,7 @@ void Sequencer::ReadBinary(const string & file)
 	fileSize = ftell(fp);
 	fseek(fp, 0, SEEK_SET);
 
-	buffer = (byte*) MemoryNew(fileSize);
+	buffer = (csbyte*) MemoryNew(fileSize);
 
 	if(buffer == NULL)
 	{
@@ -725,21 +725,21 @@ void Sequencer::ReadBinary(const string & file)
 	{
 		if(magic == magic_number_reverse) reverse = true;
 		numEvents = *(int*)bytePtr;
-		reverseNumber((byte*)&numEvents, sizeof(int), reverse);
+		reverseNumber((csbyte*)&numEvents, sizeof(int), reverse);
 		bytePtr += sizeof(int);
 
 		for(i=0; i<numEvents; i++)
 		{
 			type = *(int*)bytePtr;
-			reverseNumber((byte*)&type, sizeof(int), reverse);
+			reverseNumber((csbyte*)&type, sizeof(int), reverse);
 			bytePtr += sizeof(int);
 
 			time = *(int*)bytePtr;
-			reverseNumber((byte*)&time, sizeof(int), reverse);
+			reverseNumber((csbyte*)&time, sizeof(int), reverse);
 			bytePtr += sizeof(int);
 
 			len = *(int*)bytePtr; // data1 size
-			reverseNumber((byte*)&len, sizeof(int), reverse);
+			reverseNumber((csbyte*)&len, sizeof(int), reverse);
 			bytePtr += sizeof(int);
 
 			m_time = time;		// must set time before adding event
@@ -755,7 +755,7 @@ void Sequencer::ReadBinary(const string & file)
 				memcpy(buf, bytePtr, len);		// get data1
 				bytePtr += len + sizeof(int);	// skip data1 and data2 size (== sizeof(float) in this case)
 				value = *(float*)bytePtr;		// get data2
-				reverseNumber((byte*)&value, sizeof(int), reverse);
+				reverseNumber((csbyte*)&value, sizeof(int), reverse);
 				bytePtr += sizeof(float);		// skip data2
 				AddControlEvent(buf, (double)value, false);
 				break;
@@ -770,7 +770,7 @@ void Sequencer::ReadBinary(const string & file)
 			case EVENT_TYPE_MIDI:
 				memcpy(buf, bytePtr, len);		// data1
 				bytePtr += len + sizeof(int);	// skip data1 and data2 size (== 0 in this case)
-				AddMIDIEvent((byte*) buf, len, false);
+				AddMIDIEvent((csbyte*) buf, len, false);
 				break;
 			}
 		}
@@ -781,10 +781,10 @@ void Sequencer::ReadBinary(const string & file)
 	MemoryFree(buffer);
 }
 
-void Sequencer::WriteBinary(const string & file)
+void Sequencer::WriteBinary(const std::string & file)
 {
 	FILE *fp = NULL;
-	byte *buffer = NULL;
+	csbyte *buffer = NULL;
 	int realloc_result=0, result=0, len, byteCount = 0, bufferSize = DEFAULT_SAVE_LOAD_BUFFER_SIZE;
 	int numEvents = 0;
 	float fval;
@@ -804,7 +804,7 @@ void Sequencer::WriteBinary(const string & file)
 		return;
 	}
 
-	buffer = (byte *) MemoryNew(bufferSize);
+	buffer = (csbyte *) MemoryNew(bufferSize);
 
 	if(buffer == NULL)
 	{

@@ -20,53 +20,28 @@
     License along with this software; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+ 
+#include <exception>
+#include <cstring>
 
-#ifndef _MESSAGE_BUFFER_H
-#define _MESSAGE_BUFFER_H
-
-#include "includes.h"
-#include "definitions.h"
-#include "Lock.h"
-#include <boost/ptr_container/ptr_deque.hpp>
 
 namespace dvx {
 
-class message
+class eksepshun : public std::exception
 {
 public:
-	enum { _NORMAL_MSG = 0, _WARNING_MSG, _ERROR_MSG };
-
-	message(int type, const std::string & s) : m_type(type), m_string(s) {}
-	message(int type, const char * s) : m_type(type), m_string(s) {}
-	~message() {}
-
-	int m_type;
-	std::string m_string;
-};
-
-class message_buffer
-{
-	enum { _LIMIT = 100000 };
+	eksepshun(const char * c_str) throw()
+	{
+		strncpy(m_str, c_str, 127);
+	}
 	
-public:
-	message_buffer(t_object *o);
-	~message_buffer() {}
-
-	void add(int type, const string & s);
-	void add(int type, const char * s);
-	void addv(int type, const char * s, ... );
-	void post();
-
-private:
-	t_object *m_obj;
-	boost::ptr_deque<message> m_q;
-	DEFAULT_LOCK_TYPE m_lock;
-
-#ifdef _DEBUG
-	size_t m_largest_size; // Check this at end of debugging session to see if DEFAULT_CAPACITY is reasonable.
-#endif
+	const char* what() const throw()
+	{
+		return m_str;
+	}
+	
+private:	
+	char m_str[128];
 };
 
 } // namespace dvx
-
-#endif //_MESSAGE_BUFFER_H

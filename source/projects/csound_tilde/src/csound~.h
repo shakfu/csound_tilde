@@ -27,7 +27,6 @@
 #ifndef _CSOUND_TILDE_H
 #define _CSOUND_TILDE_H
 
-using namespace std;
 namespace dvx { class CsoundObject; }
 
 typedef struct _csound

@@ -1,21 +1,21 @@
 /*
     csound~ : A MaxMSP external interface for the Csound API.
-    
+
     Created by Davis Pyon on 2/4/06.
     Copyright 2006-2010 Davis Pyon. All rights reserved.
-    
+
     LICENSE AGREEMENT
-    
+
     This software is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
     License as published by the Free Software Foundation; either
     version 2.1 of the License, or (at your option) any later version.
-    
+
     This software is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
     Lesser General Public License for more details.
-    
+
     You should have received a copy of the GNU Lesser General Public
     License along with this software; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -24,7 +24,7 @@
 #include "CsoundObject.h"
 #include "csound.h"
 #include "csound~.h"
-#include "memory.h" 
+#include "memory.h"
 #include "util.h"
 
 using namespace dvx;
@@ -71,17 +71,17 @@ CsoundObject::~CsoundObject()
 {
 	csoundDestroy(m_csound);
 	m_msg_buf.post();
-}				
+}
 
 void CsoundObject::Compile()
 {
 	int result = CSOUND_ERROR;
 
 	// Stop the render thread if it exists.
-	if(m_renderThreadExists) 
+	if(m_renderThreadExists)
 	{
 		m_performanceFinished = false;
-    
+
 		if(0 != csoundJoinThread(m_renderThread))
 			m_msg_buf.add(message::_ERROR_MSG, "csoundJoinThread() with render thread failed.");
 		m_renderThreadExists = false;
@@ -92,7 +92,7 @@ void CsoundObject::Compile()
 	   ChannelObject Csound pointers, then when csound_outputClockCallback() calls
 	   ProcessDirtyChannels, or user sends a "control" message, access to freed
 	   memory will occur.*/
-	Stop(); 
+	Stop();
 
 	result = Compile(true);
 
@@ -107,8 +107,8 @@ void CsoundObject::Compile()
 		m_args.AddSRandKR(m_x->sr,m_ksmps); // Add "-r" and "-k" flags to override Csound sr and kr.
 		result = Compile(false);
 	}
-	
-	if(result != COMPILATION_FAILURE) 
+
+	if(result != COMPILATION_FAILURE)
 		outlet_bang(m_x->compiled_bang_outlet); // Send success bang outside any locked zones.
 }
 
@@ -124,11 +124,11 @@ int CsoundObject::Compile(bool lock)
 		m_msg_buf.add(message::_ERROR_MSG, "Can't compile. Please provide a valid csound message first.");
 		return COMPILATION_FAILURE;
 	}
-	
+
 	try
 	{
 		m_midiBuffer.Clear();
-	
+
         // FIXME - look into setting this again, at least for Windows
 //		#ifdef MACOSX
 //			if(sizeof(MYFLT) == sizeof(float))
@@ -141,8 +141,8 @@ int CsoundObject::Compile(bool lock)
 //			else
 //				default_opcodedir = "C:\\Program Files\\Csound\\plugins64";
 //		#endif
-	
-		{	
+
+		{
 			// Begin locked section.
 			ScopedLock k(m_lock,lock);
 
@@ -160,11 +160,11 @@ int CsoundObject::Compile(bool lock)
 //				if(!opcodedir && 0 != csoundSetGlobalEnv("OPCODE6DIR64", default_opcodedir.c_str()))
 //					m_msg_buf.addv(message::_ERROR_MSG, "csoundSetGlobalEnv(OPCODE6DIR64,%s) failed.", default_opcodedir.c_str());
 //			}
-		
+
 			// Let the user know what arguments are being passed to csoundCompile().
-			if(m_x->messageOutputEnabled) 
+			if(m_x->messageOutputEnabled)
 				m_msg_buf.add(message::_NORMAL_MSG, m_args.GetArgumentsAsString());
-			
+
             #ifdef _WINDOWS
                 Sleep(10); // Multiple compiles in quick successsion may crash without sleeping for a bit.
             #else
@@ -182,7 +182,7 @@ int CsoundObject::Compile(bool lock)
             // struct which contains the pointers to these functions.
             csoundSetExternalMidiInOpenCallback(m_csound, midiInOpenCallback);
             csoundSetExternalMidiInCloseCallback(m_csound, midiInCloseCallback);
-            csoundSetExternalMidiReadCallback(m_csound, midiReadCallback);			
+            csoundSetExternalMidiReadCallback(m_csound, midiReadCallback);
             csoundSetExternalMidiOutOpenCallback(m_csound, midiOutOpenCallback);
             csoundSetExternalMidiOutCloseCallback(m_csound, midiOutCloseCallback);
             csoundSetExternalMidiWriteCallback(m_csound, midiWriteCallback);
@@ -206,7 +206,7 @@ int CsoundObject::Compile(bool lock)
                 m_performanceFinished = false;
                 m_sr = csoundGetSr(m_csound);
                 m_sequencer.SetSR(m_sr);
-              
+
                 if(m_x->sr != m_sr)
                 {
                     result = COMPILATION_SUCCESS_MISMATCHED_SR;
@@ -216,10 +216,10 @@ int CsoundObject::Compile(bool lock)
 
                 m_scale = csoundGet0dBFS(m_csound);
                 m_oneDivScale = 1.0 / m_scale;
-            
+
                 if(m_chans != m_x->numInSignals)
                     m_msg_buf.addv(message::_WARNING_MSG, "# of Csound audio channels (%d) != # of signal inlets (%d).", m_chans, m_x->numInSignals);
-            
+
                 if(m_chans != m_x->numOutSignals)
                     m_msg_buf.addv(message::_WARNING_MSG, "# of Csound audio channels (%d) != # of signal outlets (%d).", m_chans, m_x->numOutSignals);
 
@@ -239,10 +239,10 @@ int CsoundObject::Compile(bool lock)
                 // Set inChans to the lesser of the two (x->chans and x->numInSignals).  Same for outChans.
                 m_inChans = (m_chans < m_x->numInSignals ? m_chans : m_x->numInSignals);
                 m_outChans = (m_chans < m_x->numOutSignals ? m_chans : m_x->numOutSignals);
-            
+
                 if(m_renderingToFile)
                 {
-                  
+
                     void *threadCreateResult = csoundCreateThread(CsoundObject_RenderThreadFunc, (void*)this);
                     if(threadCreateResult == NULL) m_msg_buf.add(message::_ERROR_MSG, "Could not create Csound render thread.");
                     else m_renderThreadExists = true;
@@ -284,10 +284,10 @@ void CsoundObject::Perform()
 				{
 					indexMultChans = m_in_index * m_chans;
 					for(chan=0; chan<m_inChans; chan++)
-						csIn[indexMultChans + chan] = (MYFLT)in[chan][i] * m_scale; 
-					
-					if(++m_in_index == m_ksmps) 
-					{	
+						csIn[indexMultChans + chan] = (MYFLT)in[chan][i] * m_scale;
+
+					if(++m_in_index == m_ksmps)
+					{
 						m_performanceFinished = csoundPerformKsmps(m_csound);
 						m_in_index = 0;
 						m_out_index = 0;
@@ -297,7 +297,7 @@ void CsoundObject::Perform()
 					{
 						indexMultChans = m_out_index * m_chans;
 						for(chan=0; chan<m_outChans; chan++)
-							out[chan][j] = (t_float)(csOut[indexMultChans + chan] * m_oneDivScale); 
+							out[chan][j] = (t_float)(csOut[indexMultChans + chan] * m_oneDivScale);
 						++j;
 						++m_out_index;
 					}
@@ -305,7 +305,7 @@ void CsoundObject::Perform()
 			}
 		}
 		else // x->evenlyDivisible == false
-		{	/* ksmps does not evenly divide the current Max vector size. Here's a description of the loop: 
+		{	/* ksmps does not evenly divide the current Max vector size. Here's a description of the loop:
 			 * We add a frame from the Max input vectors to csIn[], check to see if we have ksmps frames,
 			 * if we have ksmps frames then process Csound, then copy a frame from csOut[] to the Max output
 			 * vector (csOut[] may contain only zeros). This results in latency = ksmps. */
@@ -313,23 +313,23 @@ void CsoundObject::Perform()
 			{
 				if(!m_performanceFinished)
 				{
-					if(m_in_index == m_ksmps) 
-					{	
+					if(m_in_index == m_ksmps)
+					{
 						m_performanceFinished = csoundPerformKsmps(m_csound);
 						m_in_index = 0;
 					}
 					indexMultChans = m_in_index * m_chans;
 					for(chan=0; chan<m_inChans; chan++)
 						csIn[indexMultChans + chan] = (MYFLT)in[chan][i] * m_scale;
-					
+
 					for(chan=0; chan<m_outChans; chan++)
 						out[chan][i] = (t_float)(csOut[indexMultChans + chan] * m_oneDivScale);
-					
+
 					++m_in_index;
 				}
 			}
 		}
-		if(m_performanceFinished) 
+		if(m_performanceFinished)
 		{
 			m_iChanGroup.ClearPtrs();
 			m_oChanGroup.ClearPtrs();
@@ -365,10 +365,10 @@ void CsoundObject::Perform64()
 				{
 					indexMultChans = m_in_index * m_chans;
 					for(chan=0; chan<m_inChans; chan++)
-						csIn[indexMultChans + chan] = (MYFLT)in[chan][i] * m_scale; 
-					
-					if(++m_in_index == m_ksmps) 
-					{	
+						csIn[indexMultChans + chan] = (MYFLT)in[chan][i] * m_scale;
+
+					if(++m_in_index == m_ksmps)
+					{
 						m_performanceFinished = csoundPerformKsmps(m_csound);
 						m_in_index = 0;
 						m_out_index = 0;
@@ -386,7 +386,7 @@ void CsoundObject::Perform64()
 			}
 		}
 		else // x->evenlyDivisible == false
-		{	/* ksmps does not evenly divide the current Max vector size. Here's a description of the loop: 
+		{	/* ksmps does not evenly divide the current Max vector size. Here's a description of the loop:
 			 * We add a frame from the Max input vectors to csIn[], check to see if we have ksmps frames,
 			 * if we have ksmps frames then process Csound, then copy a frame from csOut[] to the Max output
 			 * vector (csOut[] may contain only zeros). This results in latency = ksmps. */
@@ -394,23 +394,23 @@ void CsoundObject::Perform64()
 			{
 				if(!m_performanceFinished)
 				{
-					if(m_in_index == m_ksmps) 
-					{	
+					if(m_in_index == m_ksmps)
+					{
 						m_performanceFinished = csoundPerformKsmps(m_csound);
 						m_in_index = 0;
 					}
 					indexMultChans = m_in_index * m_chans;
 					for(chan=0; chan<m_inChans; chan++)
 						csIn[indexMultChans + chan] = (MYFLT)in[chan][i] * m_scale;
-					
+
 					for(chan=0; chan<m_outChans; chan++)
 						out[chan][i] = (t_double)(csOut[indexMultChans + chan] * m_oneDivScale);
-					
+
 					++m_in_index;
 				}
 			}
 		}
-		if(m_performanceFinished) 
+		if(m_performanceFinished)
 		{
 			m_iChanGroup.ClearPtrs();
 			m_oChanGroup.ClearPtrs();
@@ -439,7 +439,7 @@ void CsoundObject::SetCsoundArguments(short argc, const t_atom *argv)
 
 void CsoundObject::SetCurDir()
 {
-	// TODO: Is this try/catch really necessary? 
+	// TODO: Is this try/catch really necessary?
 	try
 	{
 		if(m_path.size()) change_directory(m_obj, m_path.c_str());
@@ -468,7 +468,7 @@ void CsoundObject::Stop()
 			send_bang = true;
 //		}
 	}
-	if(send_bang) 
+	if(send_bang)
 		csound_sendPerfDoneBang(m_x,NULL,0,NULL); // Always call outlets outside locked zones.
 }
 
@@ -482,7 +482,7 @@ uintptr_t CsoundObject_RenderThreadFunc(void* data)
 
 	seq.StopRecording();
 	seq.StopPlaying(); // Resets time to 0.
-	
+
 	while(1)
 	{
 		ScopedLock k(cso->m_lock);
@@ -517,7 +517,7 @@ uintptr_t CsoundObject_RenderThreadFunc(void* data)
 void inputValueCallback(CSOUND *csound, const char *name, void *channelValuePtr, const void *channelType)
 {
 //	CsoundObject *cso = (CsoundObject *) csoundGetHostData(csound);
-    
+
    	t_csound *x = (t_csound *) csoundGetHostData(csound);
 	if(x->input) {
         x->cso->m_iChanGroup.GetVal(name, (MYFLT*)channelValuePtr );
@@ -528,25 +528,25 @@ void outputValueCallback(CSOUND *csound, const char *name, void *channelValuePtr
 {
 	t_csound *x = (t_csound *) csoundGetHostData(csound);
 	int type = CSOUND_OUTPUT_CHANNEL | CSOUND_CONTROL_CHANNEL;
-	
+
 	if(!x->output) return;
-	
+
 	// Find/Create the channel, set it's value.
 	x->cso->m_oChanGroup.SetVal(name, type, *((MYFLT*)channelValuePtr));
 }
 
 void messageCallback(CSOUND *csound, int attr, const char *format, va_list valist)
-{	
+{
 	t_csound *x = (t_csound *) csoundGetHostData(csound);
 	char text[MAX_STRING_LENGTH];
 	char *newLine = NULL, *ptr = NULL;
 	static char tab = (char) 9;
-	
+
 	if(!x->messageOutputEnabled) return;
-	
+
 	// Convert symbols to numbers and store output in text.
-	vsprintf(text, format, valist);	
-	
+	vsprintf(text, format, valist);
+
 	// x->cso->m_textBuffer is protected by a lock because multiple calls to messageCallback()
 	// may occur at the same time, so let's lock it.
 	ScopedLock k(x->cso->m_textBufferLock);
@@ -569,9 +569,9 @@ void messageCallback(CSOUND *csound, int attr, const char *format, va_list valis
 		// Instead add the message to a buffer and it will be output
 		// the next time csound_msgClockCallback() is called.
 		x->cso->m_msg_buf.add(message::_NORMAL_MSG, buf);
-		
+
 		// Clear the contents of buf in preparation for the next line of text.
-		buf[0] = '\0'; 
+		buf[0] = '\0';
 	}
 }
 
@@ -579,8 +579,8 @@ int midiInOpenCallback(CSOUND *csound, void **userData, const char *buf) { retur
 
 int midiInCloseCallback(CSOUND *csound, void *userData) { return 0; }
 
-// Read at most 'nbytes' bytes from our MidiBuffer and store in 'buf'. Returns the 
-// actual number of bytes read. Incomplete messages (such as a note on status without 
+// Read at most 'nbytes' bytes from our MidiBuffer and store in 'buf'. Returns the
+// actual number of bytes read. Incomplete messages (such as a note on status without
 // the data bytes) should not be returned.
 int midiReadCallback(CSOUND *csound, void *userData, unsigned char *buf, int nbytes)
 {
@@ -588,7 +588,7 @@ int midiReadCallback(CSOUND *csound, void *userData, unsigned char *buf, int nby
 	MidiBuffer *mb = &x->cso->m_midiBuffer;
 	Sequencer *seq = &x->cso->m_sequencer;
 	int bytesLeft = nbytes, bytesRead = 0, msg_size = 0;
-	
+
 	while(bytesLeft)
 	{
 		// Add a complete midi message to Csound's midi buffer.
@@ -600,7 +600,7 @@ int midiReadCallback(CSOUND *csound, void *userData, unsigned char *buf, int nby
 			if(0xB0 == (buf[bytesRead] & 0xf0))
 			{
 				// Keep track of CC values in the sequencer.
-				byte b = 0, chan, ctrl, val;
+				csbyte b = 0, chan, ctrl, val;
 				chan = b & 0x0f;
 				ctrl = buf[bytesRead + 1];
 				val = buf[bytesRead + 2];
@@ -621,8 +621,8 @@ int midiWriteCallback(CSOUND *csound, void *userData, const unsigned char *buf, 
 {
 	t_csound *x = (t_csound *) csoundGetHostData(csound);
 	int bytesWritten = 0;
-	
+
 	while(bytesWritten < nbytes) outlet_int(x->midi_outlet, (int)buf[bytesWritten++]);
-	
+
 	return bytesWritten;
-}	
+}

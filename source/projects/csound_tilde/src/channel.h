@@ -31,7 +31,7 @@
 #ifndef _CHANNEL_H
 #define _CHANNEL_H
 
-using namespace std;
+// using namespace std;
 extern int MaxChannelStringLength;
 typedef enum { IN_ = 0, OUT_ = 1 } Direction;
 
@@ -83,10 +83,10 @@ private:
 	// Change the name of this ChannelObject.
 	void SetName(const char *str);
   CSOUND *m_csound;
-  string m_name;           // The name of this channel.
+  std::string m_name;           // The name of this channel.
   int m_type;		   // Bitwise or of Csound channel types.
   MYFLT m_value;          // If type & CSOUND_CONTROL_CHANNEL, then values is stored here.
-  string m_str_value;      // If type & CSOUND_STRING_CHANNEL, then string will be stored here.
+  std::string m_str_value;      // If type & CSOUND_STRING_CHANNEL, then string will be stored here.
   bool m_dirty;          // Determines whether or not *csoundChanPtr should be set to m_value.
   MYFLT *m_csoundChanPtr; // A pointer to the actual Csound channel.
   t_symbol *m_sym;           // Since gensym() is expensive, store symbol version of m_name here.

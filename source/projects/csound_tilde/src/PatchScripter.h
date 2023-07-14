@@ -31,7 +31,6 @@
 #ifndef _PATCH_SCRIPTER_H
 #define _PATCH_SCRIPTER_H
 
-using namespace std;
 
 namespace dvx { 
 
@@ -55,7 +54,7 @@ class Element
 {
 public:
 	Element(t_object *o); // Use this to catalog existing objects.
-	Element(t_object *patcher, string script); // Creates a new object in patcher using script.
+	Element(t_object *patcher, std::string script); // Creates a new object in patcher using script.
 	~Element() {}
 
 	bool collision(const Element & e); 
@@ -63,7 +62,7 @@ public:
 	void move_abs(double x, double y);
 
 	t_object *m_obj; // Pointer to an existing or newly created object box.
-	string m_name;   // The scripting name of m_obj.
+	std::string m_name;   // The scripting name of m_obj.
 	std::string m_script; // The script that was used to create the object box.
 	t_rectex m_rect; // The bounding rect of object box.
 	bool m_new;      // True if this instance was created using ctor with script.

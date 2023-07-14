@@ -23,7 +23,6 @@
 
 #include "channel.h"
 
-using namespace std;
 using namespace dvx;
 extern int MaxChannelStringLength;
 

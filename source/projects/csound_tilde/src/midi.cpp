@@ -1,21 +1,21 @@
 /*
     csound~ : A MaxMSP external interface for the Csound API.
-    
+
     Created by Davis Pyon on 2/4/06.
     Copyright 2006-2010 Davis Pyon. All rights reserved.
-    
+
     LICENSE AGREEMENT
-    
+
     This software is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
     License as published by the Free Software Foundation; either
     version 2.1 of the License, or (at your option) any later version.
-    
+
     This software is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
     Lesser General Public License for more details.
-    
+
     You should have received a copy of the GNU Lesser General Public
     License along with this software; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -38,15 +38,15 @@ void MidiBuffer::Clear()
 	memset(m_activeNoteMatrix, 0, MIDI_MATRIX_SIZE);
 }
 
-byte MidiBuffer::Dequeue()
+csbyte MidiBuffer::Dequeue()
 {
-	byte b = m_buffer.front();
+	csbyte b = m_buffer.front();
 	m_buffer.pop_front();
 	return b;
 }
 
-void MidiBuffer::DequeueBuffer(byte* b, int n)
-{		
+void MidiBuffer::DequeueBuffer(csbyte* b, int n)
+{
 	for(int i=0; i<n; i++)
 	{
 		b[i] = m_buffer.front();
@@ -54,9 +54,9 @@ void MidiBuffer::DequeueBuffer(byte* b, int n)
 	}
 }
 
-int MidiBuffer::DequeueCompleteMessage(byte* buf, int n)
+int MidiBuffer::DequeueCompleteMessage(csbyte* buf, int n)
 {
-	byte b, status;
+	csbyte b, status;
 	ScopedLock lock(m_lock);
 
 	while(!m_buffer.empty())
@@ -101,12 +101,12 @@ int MidiBuffer::DequeueCompleteMessage(byte* buf, int n)
 		default: // Status unrecognized.
 			Dequeue(); // Discard the current byte.
 			//break;
-		}	
+		}
 	}
 	return 0;
 }
 
-void MidiBuffer::Enqueue(byte b, bool lock)
+void MidiBuffer::Enqueue(csbyte b, bool lock)
 {
 	ScopedLock k(m_lock,lock);
 	if(!m_sysex && b != 0xf0 && !m_buffer.full()) { m_buffer.push_back(b); return; }
@@ -115,14 +115,14 @@ void MidiBuffer::Enqueue(byte b, bool lock)
 	else if(b == 0xf7)
 		m_sysex = false;
 
-	if(m_buffer.full()) 
+	if(m_buffer.full())
 		object_warn(m_obj, "MidiBuffer is Full!");
 }
 
-void MidiBuffer::EnqueueBuffer(byte* b, int n, bool lock)
+void MidiBuffer::EnqueueBuffer(csbyte* b, int n, bool lock)
 {
-	byte status = 0;
-		
+	csbyte status = 0;
+
 	status = b[0] & 0xf0;
 	switch(status)
 	{
@@ -139,10 +139,10 @@ void MidiBuffer::EnqueueBuffer(byte* b, int n, bool lock)
 		break;
 	default:
 		return; // Don't add disallowed types of MIDI messages.
-	}	
-	
+	}
+
 	ScopedLock k(m_lock,lock);
-	
+
 	// If there isn't enough space for all bytes stored in b, then don't enqueue anything.
 	if(size_t(n) <= (m_buffer.capacity() - m_buffer.size()))
 		for(int i=0; i<n; i++)
@@ -153,13 +153,13 @@ void MidiBuffer::EnqueueBuffer(byte* b, int n, bool lock)
 
 void MidiBuffer::Flush()
 {
-	byte buf[3];
+	csbyte buf[3];
 	buf[2] = 64;
 
 	ScopedLock lock(m_lock);
 
-	for(byte c=0; c<16; c++)
-		for(byte p=0; p<128; p++)
+	for(csbyte c=0; c<16; c++)
+		for(csbyte p=0; p<128; p++)
 			if(m_activeNoteMatrix[c][p])
 			{
 				buf[0] = 0x80 | c;

@@ -9,7 +9,7 @@ message_buffer::message_buffer(t_object *o) : m_obj(o), m_q(), m_lock((char*)"me
 #endif
 }
 
-void message_buffer::add(int type, const string & s)
+void message_buffer::add(int type, const std::string & s)
 {
 	ScopedLock k(m_lock);
 	if(m_q.size() < _LIMIT)

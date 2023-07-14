@@ -1,21 +1,21 @@
 /*
     csound~ : A MaxMSP external interface for the Csound API.
-    
+
     Created by Davis Pyon on 2/4/06.
     Copyright 2006-2010 Davis Pyon. All rights reserved.
-    
+
     LICENSE AGREEMENT
-    
+
     This software is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
     License as published by the Free Software Foundation; either
     version 2.1 of the License, or (at your option) any later version.
-    
+
     This software is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
     Lesser General Public License for more details.
-    
+
     You should have received a copy of the GNU Lesser General Public
     License along with this software; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -27,10 +27,9 @@
 #include <sstream>
 #include <iomanip>
 
-using namespace std;
 using namespace dvx;
 
-Args::Args(t_object *o) : 
+Args::Args(t_object *o) :
 	m_obj(o),
 	m_list(),
 	m_array_size(0),
@@ -57,8 +56,8 @@ void Args::Add(const char *str)
 
 void Args::AddSRandKR(int sr, int ksmps)
 {
-	stringstream stream;
-	string s;
+	std::stringstream stream;
+	std::string s;
 
 	m_synced = false;
 
@@ -68,7 +67,7 @@ void Args::AddSRandKR(int sr, int ksmps)
 	stream >> s;
 	m_list.push_back(s);
 	stream.clear();
-	stream << "-k" << setprecision(10) << new_kr;
+	stream << "-k" << std::setprecision(10) << new_kr;
 	stream >> s;
 	m_list.push_back(s);
 }
@@ -83,22 +82,22 @@ void Args::AddSRandKR(int sr, int ksmps)
 */
 void Args::RemoveSRandKR()
 {
-	list<string>::iterator it = m_list.begin(), it2;
+	std::list<std::string>::iterator it = m_list.begin(), it2;
 
 	m_synced = false;
 
 	while(it != m_list.end())
 	{
-		if(it->find("--sample-rate") != string::npos)
+		if(it->find("--sample-rate") != std::string::npos)
 			it = m_list.erase(it);
-		else if(it->find("--control-rate") != string::npos)
+		else if(it->find("--control-rate") != std::string::npos)
 			it = m_list.erase(it);
-		else if( (it->find("-r") != string::npos) || (it->find("-k") != string::npos) )
+		else if( (it->find("-r") != std::string::npos) || (it->find("-k") != std::string::npos) )
 		{
 			if(it->size() == 2)
 			{
 				it = m_list.erase(it);
-				if(it != m_list.end()) 
+				if(it != m_list.end())
 					it = m_list.erase(it);
 			}
 			else
@@ -116,11 +115,11 @@ void Args::ClearArray()
 	m_array_size = 0;
 }
 
-void Args::SetCsoundArguments(short argc, const t_atom *argv, const string & path, const string & defaultPath)
+void Args::SetCsoundArguments(short argc, const t_atom *argv, const std::string & path, const std::string & defaultPath)
 {
 	int i;
 	char *str = NULL, tmp[MAX_STRING_LENGTH], tmp2[MAX_STRING_LENGTH];
-	string *strPtr = NULL;
+	std::string *strPtr = NULL;
 	bool rtmidi_flagPresent = false;
 	bool M_flagPresent = false;
 	bool d_flagPresent = false;
@@ -129,9 +128,9 @@ void Args::SetCsoundArguments(short argc, const t_atom *argv, const string & pat
 	bool T_flagPresent = false;
 	bool isCSD = false, isORC = false, isSCO = false;
 	FILE *fp = NULL;
-	
+
 	if(argc == 0) return;
-	
+
 	m_synced = false;
 
 	try
@@ -158,7 +157,7 @@ void Args::SetCsoundArguments(short argc, const t_atom *argv, const string & pat
 			{
 				str = argv[i].a_w.w_sym->s_name;
 				strncpy(tmp, str, MAX_STRING_LENGTH-1);
-			
+
 				if(isQuoted(tmp)) removeQuotes(tmp);
 				if(isAbsoluteMaxPath(tmp)) convertMaxPathToPosixPath(tmp, tmp, MAX_STRING_LENGTH);
 				if(strstr(tmp, "-+rtmidi")) rtmidi_flagPresent = true;
@@ -178,8 +177,8 @@ void Args::SetCsoundArguments(short argc, const t_atom *argv, const string & pat
 						}
 					}
 					else if(!strstr(tmp, "devaudio") && !strstr(tmp, "dac")) m_renderingToFile = true;
-				}	
-			
+				}
+
 				// If the current argument is a csd/orc/sco file, try to find it.
 				// If not found, use locatefile_extended() to find and extract absolute path.
 				isCSD = isORC = isSCO = false;
@@ -189,7 +188,7 @@ void Args::SetCsoundArguments(short argc, const t_atom *argv, const string & pat
 				if(!(isCSD || isORC || isSCO))
 					m_list.push_back(tmp); // Add current argument to args array.
 				else
-				{	
+				{
 					if(path.size()) change_directory(m_obj, path.c_str());
 					else if(defaultPath.size()) change_directory(m_obj, defaultPath.c_str());
 
@@ -197,7 +196,7 @@ void Args::SetCsoundArguments(short argc, const t_atom *argv, const string & pat
 					if(fp != NULL)
 					{
 						m_list.push_back(tmp);
-						fclose(fp); 
+						fclose(fp);
 					}
 					else
 					{
@@ -207,12 +206,12 @@ void Args::SetCsoundArguments(short argc, const t_atom *argv, const string & pat
 						int result = locatefile_extended(tmp, &pathID, &type, &typelist, 1);
 						if(result == 0)
 						{
-							path_topathname(pathID, tmp, tmp2); // Get a Max style absolute pathname. 
+							path_topathname(pathID, tmp, tmp2); // Get a Max style absolute pathname.
 							#ifdef _WINDOWS
 								strcpy(tmp, tmp2);
 							#elif MACOSX
 							{
-								// Use the volume name (e.g. "Macintosh HD:") to form an absolute path.   
+								// Use the volume name (e.g. "Macintosh HD:") to form an absolute path.
 								char *colon_loc = NULL;
 								sprintf(tmp, "/Volumes/%s", tmp2);
 								colon_loc = strchr(tmp, ':');
@@ -228,35 +227,35 @@ void Args::SetCsoundArguments(short argc, const t_atom *argv, const string & pat
 							object_error(m_obj, "Can't find file %s.", tmp);
 						}
 					}
-				
+
 					if(isCSD) { m_csdInPath = true; strPtr = &m_csdPath; }
 					else if(isORC) strPtr = &m_orcPath;
 					else if(isSCO) strPtr = &m_scoPath;
-				
+
 					if(isAbsolutePath(tmp))
 						*strPtr = tmp;
 					else
 					{
-						stringstream stream;
-						if(path.size())             stream << path << "/" << tmp;	
+						std::stringstream stream;
+						if(path.size())             stream << path << "/" << tmp;
 						else if(defaultPath.size()) stream << defaultPath << "/" << tmp;
 						*strPtr = stream.str();
 					}
 				}
 			}
 		}
-	
+
 		// If neither -d or -g flag is present, then add -g.  Need either -d or -g to prevent crashing.
-		if(!d_flagPresent && !g_flagPresent) m_list.push_back("-g"); 
-	
+		if(!d_flagPresent && !g_flagPresent) m_list.push_back("-g");
+
 		// If we're rendering to a file and -Fsomefilename is present and the -T flag is not present, add it.
-		if(m_renderingToFile && F_flagPresent && !T_flagPresent) m_list.push_back("-T"); 
-	
+		if(m_renderingToFile && F_flagPresent && !T_flagPresent) m_list.push_back("-T");
+
 		// Need this so that MIDI input is enabled.  We are not going
 		// to let Csound accept MIDI data from MaxMSP; below we're going
 		// to set the midiReadCallback function pointer to our own function.
-		if(!rtmidi_flagPresent) m_list.push_back("-+rtmidi=null"); 
-		if(!M_flagPresent) m_list.push_back("-M0");	
+		if(!rtmidi_flagPresent) m_list.push_back("-+rtmidi=null");
+		if(!M_flagPresent) m_list.push_back("-M0");
 	}
 	catch(std::exception & ex)
 	{
@@ -271,8 +270,8 @@ char** Args::GetArray()
 
 	if(false == m_synced)
 	{
-		list<string>::iterator it;
-		
+		std::list<std::string>::iterator it;
+
 		for(it = m_list.begin(); it != m_list.end(); it++)
 		{
 			m_array[m_array_size] = strdup(it->c_str());
@@ -289,10 +288,10 @@ char** Args::GetArray()
 	return static_cast<char**>(m_array);
 }
 
-string Args::GetArgumentsAsString()
+std::string Args::GetArgumentsAsString()
 {
-	list<string>::iterator it = m_list.begin();
-	stringstream stream;
+	std::list<std::string>::iterator it = m_list.begin();
+	std::stringstream stream;
 
 	while(it != m_list.end())
 	{

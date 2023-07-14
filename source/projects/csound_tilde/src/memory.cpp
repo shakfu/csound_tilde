@@ -21,40 +21,32 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#ifndef _DEFINITIONS_H
-#define _DEFINITIONS_H
+#include "memory.h"
 
-#define DEFAULT_NUM_SIGNALS 2
-#define MAX_ARGS 64
-#define MAX_STRING_LENGTH 1024
-#define MAX_CHAN_NAME_LENGTH 64
-#define MAX_EVENT_MESSAGE_SIZE 1024
-#define DEFAULT_CLOCK_INTERVAL 10
-#define DEFAULT_MESSAGE_CLOCK_INTERVAL 200
-#define RECORD_CLOCK_INTERVAL 1
-#define DEFAULT_SAMPLE_RATE 44100
-#define DEFAULT_STOPPAGE_TIME 8 // seconds
-#define MAX_ATOM_LIST_SIZE 32
-#define MIDI_MATRIX_SIZE 2048   // 16 * 128
+int BufferWrite(csbyte **buffer, const void *src, int len, int *count, int *bufferSize)
+{
+	void *dst = NULL;
 
-// INCORRECT
-// Should be platform AND compiler.
-#ifdef _WINDOWS
-	#define _USE_BOOST_SERIALIZATION
-	typedef unsigned char byte;
-#endif
+	// Grow the buffer if buffer is over half full.
+	if(*count + len > (*bufferSize / 2))
+	{
+		*bufferSize *= 2;
+		*buffer = (csbyte*) realloc(*buffer, *bufferSize);
+		if(*buffer == NULL)
+		{
+			post("BufferWrite():  realloc() failed.");
+			return 1;
+		}
+	}
 
-#ifdef MACOSX
-	#ifndef PPC
-		// Sequencer uses boost.serialization which requires 1-byte bool (darwin ppc arch uses 4-byte bool).
-		#define _USE_BOOST_SERIALIZATION
-	#endif
-	typedef unsigned char byte;
-	typedef unsigned int DWORD;
-#endif
+	// Figure out where in buffer to write to.
+	dst = *buffer + *count;
 
-#ifndef FL
-	#define FL(x) x##f
-#endif
+	// Copy src to buffer.
+	memcpy(dst, src, len);
 
-#endif // _DEFINITIONS_H
+	// Update the byte count (i.e. buffer offset).
+	*count += len;
+
+	return 0;
+}

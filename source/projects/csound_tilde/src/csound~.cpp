@@ -1,21 +1,21 @@
 /*
     csound~ : A MaxMSP external interface for the Csound API.
-    
+
     Created by Davis Pyon on 2/4/06.
     Copyright 2006-2010 Davis Pyon. All rights reserved.
-    
+
     LICENSE AGREEMENT
-    
+
     This software is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
     License as published by the Free Software Foundation; either
     version 2.1 of the License, or (at your option) any later version.
-    
+
     This software is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
     Lesser General Public License for more details.
-    
+
     You should have received a copy of the GNU Lesser General Public
     License along with this software; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -58,7 +58,7 @@ int T_EXPORT main(void)
 	class_addmethod(c, (method)csound_control,      "control", A_GIMME, 0);
 	class_addmethod(c, (method)csound_dblclick,     "dblclick", A_CANT, 0);
 	class_addmethod(c, (method)csound_dsp,          "dsp", A_CANT, 0);
-   	class_addmethod(c, (method)csound_dsp64,          "dsp64", A_CANT, 0);
+   	class_addmethod(c, (method)csound_dsp64,        "dsp64", A_CANT, 0);
 	class_addmethod(c, (method)csound_event,        "e", A_GIMME, 0);
 	class_addmethod(c, (method)csound_event,        "event", A_GIMME, 0);
 	class_addmethod(c, (method)csound_float,        "float", A_FLOAT, 0);
@@ -88,11 +88,11 @@ int T_EXPORT main(void)
 	class_addmethod(c, (method)csound_write,        "write", A_GIMME, 0);
 	class_addmethod(c, (method)csound_writebuf,     "writebuf", A_GIMME, 0);
 	class_addmethod(c, (method)csound_wsidx,        "wsidx", A_GIMME, 0);
-	
+
 	CLASS_ATTR_SYM(c, "args", 0, t_csound, args);
 	CLASS_ATTR_SAVE(c, "args", 0);
 	CLASS_ATTR_STYLE_LABEL(c, "args", 0, "text", "\"csound\" Arguments");
-	
+
 	CLASS_ATTR_LONG(c, "autostart", 0, t_csound, autostart);
 	CLASS_ATTR_SAVE(c, "autostart", 0);
 	CLASS_ATTR_FILTER_CLIP(c, "autostart", 0, 1);
@@ -125,12 +125,12 @@ int T_EXPORT main(void)
 	CLASS_ATTR_SAVE(c, "interval", 0);
 	CLASS_ATTR_FILTER_CLIP(c, "interval", 1, 5000);
 	CLASS_ATTR_STYLE_LABEL(c, "interval", 0, "text", "Output Control Message Clock Interval (ms)");
-	
+
 	CLASS_ATTR_LONG(c, "matchsr", 0, t_csound, matchMaxSR);
 	CLASS_ATTR_SAVE(c, "matchsr", 0);
 	CLASS_ATTR_FILTER_CLIP(c, "matchsr", 0, 1);
 	CLASS_ATTR_STYLE_LABEL(c, "matchsr", 0, "onoff", "Auto Recompile to Match Max SR");
-	
+
 	CLASS_ATTR_LONG(c, "message", 0, t_csound, messageOutputEnabled);
 	CLASS_ATTR_SAVE(c, "message", 0);
 	CLASS_ATTR_FILTER_CLIP(c, "message", 0, 1);
@@ -149,7 +149,7 @@ int T_EXPORT main(void)
 	CLASS_ATTR_FILTER_CLIP(c, "output", 0, 1);
 	CLASS_ATTR_STYLE_LABEL(c, "output", 0, "onoff", "Allow Ouput Control Messages");
 	CLASS_ATTR_ACCESSORS(c, "output", NULL, (method)csound_output_set);
-	
+
 	CLASS_ATTR_LONG(c, "overdrive", 0, t_csound, outputOverdrive);
 	CLASS_ATTR_SAVE(c, "overdrive", 0);
 	CLASS_ATTR_ACCESSORS(c, "overdrive", NULL, (method)csound_overdrive_set);
@@ -174,8 +174,8 @@ int T_EXPORT main(void)
 void csound_assist(t_csound *x, void *b, long msg, long arg, char *s)
 {
 	int i;
-	
-	if(msg == ASSIST_INLET) 
+
+	if(msg == ASSIST_INLET)
 	{
 		switch(arg)
 		{
@@ -216,7 +216,7 @@ void csound_open(t_csound *x)
 	{
 		openFile(cso->m_obj, cso->m_args.OrcPath().c_str());
 		openFile(cso->m_obj, cso->m_args.ScoPath().c_str());
-	}	
+	}
 }
 
 void csound_message(t_csound *x, long n)
@@ -228,10 +228,10 @@ t_max_err csound_overdrive_set(t_csound *x, void *attr, long ac, t_atom *av)
 {
 	if (ac && av) {
 		long n = atom_getlong(av);
-		
+
 		if(n == 0)
 		{
-			x->outputOverdrive = false; 
+			x->outputOverdrive = false;
 			if(x->output) clock_fdelay(x->outputClock, x->outputClockInterval); // Restart the clock.
 		}
 		else
@@ -254,77 +254,77 @@ t_int *csound_perform(t_int *w)
 	t_csound *x = (t_csound *)(w[1]);
 	int i, chan, vectorSize = x->vectorSize;
 	CsoundObject *cso = x->cso;
-	
+
 	for(i=0; i<x->numInSignals; i++) x->in[i] = (float *)(w[i+2]);
-	for(i=0; i<x->numOutSignals; i++) 
+	for(i=0; i<x->numOutSignals; i++)
 	{
 		x->out[i] = (float *)(w[i+2+x->numInSignals]);
 		memset(x->out[i], 0, sizeof(t_float) * x->vectorSize);
 	}
 
-	if(x->l_obj.z_disabled) 
+	if(x->l_obj.z_disabled)
 		return (w+1+x->numPerformArgs);
-	
+
 	if(x->bypass)
 	{
 		// Copy audio input to output.
 		chan = (x->numInSignals < x->numOutSignals ? x->numInSignals : x->numOutSignals);
 		for(i=0; i<chan; i++) memcpy(x->out[i], x->in[i], sizeof(float) * vectorSize);
-		
+
 		// Since we're bypassing the Csound performance, return early.
 		// Must return w + 1 + the # of args to perform method (see csound_dsp()).
-		return (w+1+x->numPerformArgs);  
+		return (w+1+x->numPerformArgs);
 	}
-	
+
 	cso->Perform();
-	
+
 	if(x->outputOverdrive && x->output)
 	{
 		cso->m_oChanGroup.ProcessDirtyChannels(ChannelGroup::AUDIO_THREAD);
 		cso->m_oChanGroup.SendDirtyChannels(x->message_outlet, ChannelGroup::AUDIO_THREAD);
 	}
-	
+
 	// Must return w + 1 + the # of args to perform method (see csound_dsp()).
-	return (w+1+x->numPerformArgs);  
+	return (w+1+x->numPerformArgs);
 }
 
 
 void csound_perform64(t_object *_x, t_object *dsp64, double **ins,
                            long numins, double **outs, long numouts, long sampleframes, long flags, void *
                            userparam) {
-    
+
 	t_csound *x = (t_csound *)_x;
 	int i, chan, vectorSize = x->vectorSize;
 	CsoundObject *cso = x->cso;
 	x->in64 = ins, x->out64 = outs;
-    
+
 //	for(i=0; i<x->numInSignals; i++) x->in[i] = (float *)(w[i+2]);
 	for(i=0; i < numouts; i++)
 	{
 		memset(outs[i], 0, sizeof(t_double) * sampleframes);
 	}
-    
+
 	if(x->l_obj.z_disabled) return;
-	
+
 	if(x->bypass)
 	{
 		// Copy audio input to output.
 		chan = (x->numInSignals < x->numOutSignals ? x->numInSignals : x->numOutSignals);
 		for(i=0; i<chan; i++) memcpy(x->out64[i], x->in64[i], sizeof(double) * vectorSize);
-		
+
 		// Since we're bypassing the Csound performance, return early.
 		// Must return w + 1 + the # of args to perform method (see csound_dsp()).
 //		return (w+1+x->numPerformArgs);
 	}
-	
+
 	cso->Perform64();
-	
+
 	if(x->outputOverdrive && x->output)
 	{
 		cso->m_oChanGroup.ProcessDirtyChannels(ChannelGroup::AUDIO_THREAD);
 		cso->m_oChanGroup.SendDirtyChannels(x->message_outlet, ChannelGroup::AUDIO_THREAD);
 	}
-	
+
 	// Must return w + 1 + the # of args to perform method (see csound_dsp()).
 //	return (w+1+x->numPerformArgs);
 }
@@ -335,14 +335,14 @@ void csound_dsp(t_csound *x, t_signal **sp, short *count)
 	CsoundObject *cso = x->cso;
 	int i=0, totalVectors=0;
 	void **perform_args;
-	
+
 	totalVectors = x->numInSignals + x->numOutSignals;
 	x->numPerformArgs = totalVectors + 1;
 
 	perform_args = (void **) MemoryNew(sizeof(void*) * (totalVectors + 1));
 	perform_args[0] = (void *) x;  // first argument is a pointer to the t_csound struct
 	for(i=1; i<=totalVectors; i++) perform_args[i] = (void*) sp[i-1]->s_vec;
-	
+
 	x->sr = sp[0]->s_sr;  // store current sampling rate
 	x->vectorSize = sp[0]->s_n; // store vector size
 	x->one_div_sr = 1.0f / (float)x->sr; // store 1 / sr
@@ -369,24 +369,24 @@ void csound_dsp64(t_csound *x, t_object *dsp64, short *count, double samplerate,
 //	int i=0, totalVectors=0;
     int totalVectors=0;
 //	void **perform_args;
-	
+
 	totalVectors = x->numInSignals + x->numOutSignals;
 	x->numPerformArgs = totalVectors + 1;
-    
+
 //	perform_args = (void **) MemoryNew(sizeof(void*) * (totalVectors + 1));
 //	perform_args[0] = (void *) x;  // first argument is a pointer to the t_csound struct
 //	for(i=1; i<=totalVectors; i++) perform_args[i] = (void*) sp[i-1]->s_vec;
-	
+
 //	x->sr = sp[0]->s_sr;  // store current sampling rate
     x->sr = (int)samplerate;  // store current sampling rate
 //	x->vectorSize = sp[0]->s_n; // store vector size
     x->vectorSize = maxvectorsize;
 	x->one_div_sr = 1.0f / (float)x->sr; // store 1 / sr
-   
+
 //	dsp_addv(csound_perform, x->numPerformArgs, perform_args);
 	dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)csound_perform64, 0, NULL);
 //	MemoryFree(perform_args);
-    
+
 	if(cso->m_compiled && x->sr != cso->m_sr)
 	{
 		if(!x->matchMaxSR && x->messageOutputEnabled)
@@ -396,14 +396,14 @@ void csound_dsp64(t_csound *x, t_object *dsp64, short *count, double samplerate,
 			cso->Compile();
 		}
 	}
-    
+
 	x->evenlyDivisible = (x->vectorSize % x->cso->m_ksmps == 0);
 }
- 
+
 void csound_int(t_csound *x, long n)
 {
 	if(x->bypass || !x->cso->m_compiled || x->cso->m_performanceFinished) return;
-	x->cso->m_midiBuffer.Enqueue((byte) n);
+	x->cso->m_midiBuffer.Enqueue((csbyte) n);
 }
 
 void csound_float(t_csound *x, double f){}
@@ -419,12 +419,12 @@ void csound_control(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 
 	if(!x->input) return;
 
-	if(argc != 2 || argv[0].a_type != A_SYM) 
+	if(argc != 2 || argv[0].a_type != A_SYM)
 	{
 		char buf[128];
 		PrintAtoms(s, argc, argv, buf, 128);
 		object_error(x->m_obj, "Incorrect control message format: %s", buf);
-		return;	
+		return;
 	}
 
 	name = argv[0].a_w.w_sym->s_name;
@@ -435,12 +435,12 @@ void csound_control(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 	case A_SYM:   s_val = argv[1].a_w.w_sym->s_name; break;
 	}
 
-	if(NULL == s_val) 
+	if(NULL == s_val)
 	{
 		type = CSOUND_INPUT_CHANNEL | CSOUND_CONTROL_CHANNEL;
 		{
 			ScopedLock k(cso->m_lock);
-			
+
 			if(cso->m_compiled && !cso->m_performanceFinished)
 				cso->m_iChanGroup.SetValAndSync(name, type, f_val);
 			else
@@ -449,11 +449,11 @@ void csound_control(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 		if(seq.Recording())
 			seq.AddControlEvent(name, f_val, true);
 	}
-	else 
+	else
 	{
 		type = CSOUND_INPUT_CHANNEL | CSOUND_STRING_CHANNEL;
-		{	
-			ScopedLock k(cso->m_lock); 
+		{
+			ScopedLock k(cso->m_lock);
 
 			if(cso->m_compiled && !cso->m_performanceFinished)
 				cso->m_iChanGroup.SetValAndSync(name, type, s_val);
@@ -468,8 +468,8 @@ void csound_control(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 void csound_midi(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 {
 	int i;
-	byte buffer[MAX_MIDI_MESSAGE_SIZE];
-	
+	csbyte buffer[MAX_MIDI_MESSAGE_SIZE];
+
 	if(x->bypass || sys_getdspstate()) return;
 	if(argc == 0 || argc > MAX_MIDI_MESSAGE_SIZE) return;
 	for(i=0; i<argc; i++)
@@ -477,9 +477,9 @@ void csound_midi(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 		switch(argv[i].a_type)
 		{
 		case A_LONG:
-			buffer[i] = (byte) atom_getlong(&argv[i]);
+			buffer[i] = (csbyte) atom_getlong(&argv[i]);
 			break;
-		default: 
+		default:
 			object_error(x->m_obj, "Only integers are allowed in midi messages.");
 			return;
 		}
@@ -503,13 +503,13 @@ void csound_parse(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 void csound_path(t_csound *x, t_symbol *s)
 {
 	char path[MAX_STRING_LENGTH];
-	
+
 	if(strlen(s->s_name) >= MAX_STRING_LENGTH)
 	{
 		object_error(x->m_obj, "Pathname is too long; maximum string length is %d.", MAX_STRING_LENGTH);
 		return;
 	}
-	
+
 	strncpy(path, s->s_name, MAX_STRING_LENGTH-1);
 	if(isQuoted(path)) removeQuotes(path);
 	convertMaxPathToPosixPath(path, path, MAX_STRING_LENGTH);
@@ -524,7 +524,7 @@ void csound_path(t_csound *x, t_symbol *s)
 		x->cso->m_path = path;
 	}
 	else
-		object_error(x->m_obj, "%s not found, or you don't have exec permission on folder or an ancestor folder.", 
+		object_error(x->m_obj, "%s not found, or you don't have exec permission on folder or an ancestor folder.",
 			 path);
 }
 
@@ -533,9 +533,9 @@ void csound_event(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 	CsoundObject *cso = x->cso;
 	int i, totalSize = 0;
 	char buffer[MAX_EVENT_MESSAGE_SIZE], tmp[MAX_STRING_LENGTH];
-	
+
 	if(argc == 0 || argv[0].a_type != A_SYM) return;
-	
+
 	sprintf(buffer, "%s", argv[0].a_w.w_sym->s_name);
 	totalSize += strlen(buffer);
 
@@ -555,27 +555,27 @@ void csound_event(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 			break;
 		case A_SYM:
 			// Add double quotes if a space or slash is present and it's not quoted.
-			if(!isQuoted(argv[i].a_w.w_sym->s_name) && 
+			if(!isQuoted(argv[i].a_w.w_sym->s_name) &&
 				(strchr(argv[i].a_w.w_sym->s_name, '/') ||
 				 strchr(argv[i].a_w.w_sym->s_name, '\\') ||
 				 strchr(argv[i].a_w.w_sym->s_name, ' ')))
 			{
 				char tmp2[MAX_STRING_LENGTH];
-				
+
 				if(isAbsoluteMaxPath(argv[i].a_w.w_sym->s_name))
 				{
 					convertMaxPathToPosixPath(argv[i].a_w.w_sym->s_name, tmp2, MAX_STRING_LENGTH);
-					snprintf(tmp, MAX_STRING_LENGTH-1, " \"%s\"", tmp2); 
+					snprintf(tmp, MAX_STRING_LENGTH-1, " \"%s\"", tmp2);
 				}
 				else
-					snprintf(tmp, MAX_STRING_LENGTH-1, " \"%s\"", argv[i].a_w.w_sym->s_name); 
+					snprintf(tmp, MAX_STRING_LENGTH-1, " \"%s\"", argv[i].a_w.w_sym->s_name);
 			}
 			else
 				snprintf(tmp, MAX_STRING_LENGTH-1, " %s", argv[i].a_w.w_sym->s_name);
 			totalSize += strlen(tmp);
 			strncat(buffer, tmp, MAX_EVENT_MESSAGE_SIZE - strlen(buffer) - 1);
 			break;
-		default: 
+		default:
 			object_error(x->m_obj, "Unrecognized element in event string.");
 			return;
 		}
@@ -584,7 +584,7 @@ void csound_event(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 	// If the event string is too long, don't pass the truncated string to Csound.
 	if(totalSize >= MAX_EVENT_MESSAGE_SIZE)
 	{
-		object_error(x->m_obj, "Event string size %d too large.  Max size is %d.", 
+		object_error(x->m_obj, "Event string size %d too large.  Max size is %d.",
 		     totalSize, MAX_EVENT_MESSAGE_SIZE - 1);
 	}
 	else if(!cso->m_renderingToFile)
@@ -626,7 +626,8 @@ void *csound_new(t_symbol *s, short argc, t_atom *argv)
 		x->outputOverdrive = false;
 
 		x->cso = new CsoundObject(x);                // Must construct CsoundObject before following code!
-		std::auto_ptr<CsoundObject> auto_p(x->cso);  // Just in case exception happens before end of try.
+		// std::auto_ptr<CsoundObject> auto_p(x->cso);  // Just in case exception happens before end of try.
+		std::unique_ptr<CsoundObject> auto_p(x->cso);  // Just in case exception happens before end of try.
 
 		x->outputClock = clock_new(x, (method)csound_outputClockCallback);
 		clock_fdelay(x->outputClock, x->outputClockInterval);
@@ -635,15 +636,15 @@ void *csound_new(t_symbol *s, short argc, t_atom *argv)
 		clock_fdelay(x->msgClock, DEFAULT_MESSAGE_CLOCK_INTERVAL);
 
 		// Process "@" csound~ arguments. Must process after creating CsoundObject because @autostart may == 1.
-		attr_args_process(x, argc, argv);	
-	
+		attr_args_process(x, argc, argv);
+
 		if(firstTime)
 		{
 			// Post the version number.
 			object_post(x->m_obj, "csound~ v1.1.3");
 			firstTime = false;
 		}
-	
+
 		// Initialize variables with the arguments to our object.
 		for(i = 0; i < argc; i++)
 		{
@@ -680,10 +681,10 @@ void *csound_new(t_symbol *s, short argc, t_atom *argv)
 				case A_SYM:
 					str = argv[i].a_w.w_sym->s_name;
 
-					if(str[0] == '@') 
-						lastAttr = str; 
-					else 
-					if(strstr(str, ".csd") || strstr(str, ".orc") || strstr(str, ".sco") || 
+					if(str[0] == '@')
+						lastAttr = str;
+					else
+					if(strstr(str, ".csd") || strstr(str, ".orc") || strstr(str, ".sco") ||
 					   strstr(str, ".CSD") || strstr(str, ".ORC") || strstr(str, ".SCO"))
 					{
 						// The current string contains a csd/orc/sco file.
@@ -699,43 +700,43 @@ void *csound_new(t_symbol *s, short argc, t_atom *argv)
 					break;
 			}
 		}
-	
-		// Add signal inlets.				
-		dsp_setup((t_pxobject *)x, x->numInSignals);  
+
+		// Add signal inlets.
+		dsp_setup((t_pxobject *)x, x->numInSignals);
 		((t_pxobject *)x)->z_misc = Z_NO_INPLACE;
-	
+
 		// Add non-signal outlets (right to left).
 		x->done_bang_outlet = bangout(x);
 		x->compiled_bang_outlet = bangout(x);
 		x->midi_outlet = intout(x);
 		x->message_outlet = listout(x);
-	
+
 		// Add signal outlets.
-		for(i=0; i<x->numOutSignals; i++) outlet_new((t_object *)x, "signal"); 
-	
+		for(i=0; i<x->numOutSignals; i++) outlet_new((t_object *)x, "signal");
+
 		x->sr = sys_getsr();
 		x->cso->m_inChans = x->numInSignals;
 		x->cso->m_outChans = x->numOutSignals;
 		x->in = (float **) MemoryNew(sizeof(float *) * x->numInSignals);
 		x->out = (float **) MemoryNew(sizeof(float *) * x->numOutSignals);
-	
+
 		x->cso->m_defaultPathID = path_getdefault();
-	
+
 		if(0 == path_topotentialname(x->cso->m_defaultPathID, "", tmpStr, false))
 		{
 		#ifdef _WINDOWS
 			x->cso->m_defaultPath = tmpStr;
 		#elif MACOSX
 			// Copy tmpStr to x->cso->m_defaultPath.  In the process, use the volume name
-			// (e.g. "Macintosh HD:") to form an absolute path.   
-			string &s = x->cso->m_defaultPath;
+			// (e.g. "Macintosh HD:") to form an absolute path.
+			std::string &s = x->cso->m_defaultPath;
 			s = "/Volumes/";
 			s += tmpStr;
 			s.erase(s.find_first_of(':'), 1);
 		#endif
 			SetEnvironment(x, x->cso->m_defaultPath.c_str());
 		}
-	
+
 		x->atomList[0].a_type = A_SYM;
 		x->atomList[0].a_w.w_sym = gensym("rsidx");
 		x->atomList[1].a_type = A_LONG;
@@ -748,7 +749,7 @@ void *csound_new(t_symbol *s, short argc, t_atom *argv)
 		{
 			t_atom temp_list[MAX_ATOM_LIST_SIZE];
 			int size = CreateAtomListFromString(x->m_obj, x->args->s_name, temp_list, MAX_ATOM_LIST_SIZE);
-			if(size) 
+			if(size)
 			{
 				csound_csound(x, NULL, size, temp_list);
 				if(x->autostart)
@@ -785,7 +786,7 @@ void csound_csound(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 }
 
 void csound_start(t_csound *x)
-{ 
+{
 	defer_low(x->m_obj, (method)csound_startDeferred, NULL, 0, NULL);
 }
 
@@ -795,7 +796,7 @@ void csound_startDeferred(t_csound *x)
 }
 
 void csound_stop(t_csound *x)
-{ 
+{
 	defer_low(x->m_obj, (method)csound_stopDeferred, NULL, 0, NULL);
 }
 
@@ -856,12 +857,12 @@ void SetEnvironment(t_csound *x, const char *path)
 {
 	int result;
 	char tmp[MAX_STRING_LENGTH];
-	
-	if(isAbsoluteMaxPath(path))	
+
+	if(isAbsoluteMaxPath(path))
 		convertMaxPathToPosixPath(path, tmp, MAX_STRING_LENGTH);
 	else
 		strncpy(tmp, path, MAX_STRING_LENGTH-1);
-	
+
 	if(strlen(tmp))
 	{
 		result = csoundSetGlobalEnv("SFDIR", tmp);
@@ -877,13 +878,13 @@ void SetEnvironment(t_csound *x, const char *path)
 	}
 }
 
-void csound_sendPerfDoneBang(t_csound *x, t_symbol *s, long argc, t_atom *argv) 
-{ 
+void csound_sendPerfDoneBang(t_csound *x, t_symbol *s, long argc, t_atom *argv)
+{
 	outlet_bang(x->done_bang_outlet);
 }
 
 void csound_outputClockCallback(t_csound *x)
-{	
+{
 	if(!x->outputOverdrive && x->output)
 	{
 		{
@@ -915,8 +916,8 @@ void csound_writeDeferred(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 {
 	CsoundObject *cso = x->cso;
 	Sequencer &seq = cso->m_sequencer;
-	string file, absPath;
-	
+	std::string file, absPath;
+
 	if(argc < 1 || argv[0].a_type != A_SYM) return;
 
 	try
@@ -928,7 +929,7 @@ void csound_writeDeferred(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 			convertMaxPathToPosixPath(file);
 			absPath = file;
 		}
-		else 
+		else
 			absPath = cso->m_defaultPath + "/" + file;
 
 		if(seq.m_read_write_thread_exists)
@@ -963,8 +964,8 @@ void csound_readDeferred(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 {
 	CsoundObject *cso = x->cso;
 	Sequencer &seq = cso->m_sequencer;
-	string file, absPath;
-	
+	std::string file, absPath;
+
 	if(argc < 1 || argv[0].a_type != A_SYM) return;
 
 	try
@@ -982,7 +983,7 @@ void csound_readDeferred(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 			convertMaxPathToPosixPath(file);
 			absPath = file;
 		}
-		else 
+		else
 			absPath = cso->m_defaultPath + "/" + file;
 
 		if(seq.m_read_write_thread_exists)
@@ -1011,7 +1012,7 @@ void csound_readDeferred(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 void csound_tempo(t_csound *x, double f)
 {
 	// Don't allow changes to bpm while recording.
-	if(!x->cso->m_sequencer.Recording()) 
+	if(!x->cso->m_sequencer.Recording())
 		x->cso->m_sequencer.SetBPM((float) (f * DEFAULT_BPM));
 }
 
@@ -1021,35 +1022,35 @@ void csound_loadsamp(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 	int tableNum, channel;
 	char filename[MAX_STRING_LENGTH];
 	float offsetSeconds = 0.0f;
-	float sizeSeconds = 0.0f; 
-	
+	float sizeSeconds = 0.0f;
+
 	if(argc < 3 || argv[0].a_type != A_LONG || argv[1].a_type != A_LONG || argv[2].a_type != A_SYM) return;
 	tableNum = atom_getlong(&argv[0]);
 	channel = atom_getlong(&argv[1]);
 	strncpy(filename, argv[2].a_w.w_sym->s_name, MAX_STRING_LENGTH-1);
-	
+
 	// If 4'th argument exists, it specifies offset time in seconds.
 	if(argc > 3)
 	{
-		switch(argv[3].a_type) 
+		switch(argv[3].a_type)
 		{
 		case A_FLOAT: offsetSeconds = (float) atom_getfloat(&argv[3]); break;
 		case A_LONG:  offsetSeconds = (float) atom_getlong(&argv[3]); break;
 		}
 	}
-	
+
 	// If 5'th argument exists, it specifies time to read in seconds.
 	if(argc > 4)
 	{
-		switch(argv[4].a_type) 
+		switch(argv[4].a_type)
 		{
 		case A_FLOAT: sizeSeconds = atom_getfloat(&argv[4]); break;
 		case A_LONG:  sizeSeconds = (float) atom_getlong(&argv[4]); break;
 		}
 	}
-	
+
 	ScopedLock k(cso->m_lock);
-	
+
 	if(cso->m_compiled && !cso->m_performanceFinished)
 	{
 		if(isQuoted(filename)) removeQuotes(filename);
@@ -1060,7 +1061,7 @@ void csound_loadsamp(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 			if(cso->m_path.size()) change_directory(x->m_obj, cso->m_path.c_str());
 			else if(cso->m_defaultPath.size()) change_directory(x->m_obj, cso->m_defaultPath.c_str());
 		}
-		
+
 		CsoundTable ct(x->m_obj, x->cso->m_csound);
 
 		// If tableNum < 0, then increase the size of the target table if necessary;
@@ -1075,25 +1076,25 @@ void csound_readbuf(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 	int tableNum, channel;
 	float offsetSeconds = 0.0f;
 	float sizeSeconds = 0.0f;
-	
+
 	if(argc < 3 || argv[0].a_type != A_LONG || argv[1].a_type != A_LONG || argv[2].a_type != A_SYM) return;
 	tableNum = atom_getlong(&argv[0]);
 	channel = atom_getlong(&argv[1]);
-	
+
 	// If 4'th argument exists, it specifies offset time in seconds.
 	if(argc > 3)
 	{
-		switch(argv[3].a_type) 
+		switch(argv[3].a_type)
 		{
 		case A_FLOAT: offsetSeconds = (float) atom_getfloat(&argv[3]);  break;
 		case A_LONG:  offsetSeconds = (float) atom_getlong(&argv[3]);  break;
 		}
 	}
-	
+
 	// If 5'th argument exists, it specifies time to read in seconds.
 	if(argc > 4)
 	{
-		switch(argv[4].a_type) 
+		switch(argv[4].a_type)
 		{
 		case A_FLOAT: sizeSeconds = (float) atom_getfloat(&argv[4]);  break;
 		case A_LONG:  sizeSeconds = (float) atom_getlong(&argv[4]); break;
@@ -1114,26 +1115,26 @@ void csound_writebuf(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 	CsoundObject *cso = x->cso;
 	int tableNum, channel;
 	float offsetSeconds = 0.0f;
-	float sizeSeconds = 0.0f; 
-	
+	float sizeSeconds = 0.0f;
+
 	if(argc < 3 || argv[0].a_type != A_LONG || argv[1].a_type != A_LONG || argv[2].a_type != A_SYM) return;
 	tableNum = atom_getlong(&argv[0]);
 	channel = atom_getlong(&argv[1]);
-	
+
 	// If 4'th argument exists, it specifies offset time in seconds.
 	if(argc > 3)
 	{
-		switch(argv[3].a_type) 
+		switch(argv[3].a_type)
 		{
 		case A_FLOAT: offsetSeconds = (float) atom_getfloat(&argv[3]);  break;
 		case A_LONG:  offsetSeconds = (float) atom_getlong(&argv[3]);  break;
 		}
 	}
-	
+
 	// If 5'th argument exists, it specifies time to read in seconds.
 	if(argc > 4)
 	{
-		switch(argv[4].a_type) 
+		switch(argv[4].a_type)
 		{
 		case A_FLOAT: sizeSeconds = (float) atom_getfloat(&argv[4]);  break;
 		case A_LONG:  sizeSeconds = (float) atom_getlong(&argv[4]);  break;
@@ -1141,7 +1142,7 @@ void csound_writebuf(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 	}
 
 	ScopedLock(cso->m_lock);
-	
+
 	if(cso->m_compiled && !cso->m_performanceFinished)
 	{
 		CsoundTable ct(x->m_obj, cso->m_csound);
@@ -1154,12 +1155,12 @@ void csound_rsidx(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 	CsoundObject *cso = x->cso;
 	int tableNum, index, result = -1;
 	MYFLT val;
-	
+
 	if(argc != 2 || argv[0].a_type != A_LONG || argv[1].a_type != A_LONG) return;
 	tableNum = atom_getlong(&argv[0]);
 	index = atom_getlong(&argv[1]);
 	if(index < 0) return;
-	
+
 	{
 		ScopedLock k(cso->m_lock);
 		if(cso->m_compiled && !cso->m_performanceFinished)
@@ -1168,7 +1169,7 @@ void csound_rsidx(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 			result = ct.Get(tableNum, index, &val);
 		}
 	}
-	
+
 	switch(result)
 	{
 	case 0:
@@ -1190,14 +1191,14 @@ void csound_wsidx(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 	CsoundObject *cso = x->cso;
 	int tableNum, index, result = 0;
 	float val;
-	
-	if(argc != 3 || argv[0].a_type != A_LONG || argv[1].a_type != A_LONG || 
+
+	if(argc != 3 || argv[0].a_type != A_LONG || argv[1].a_type != A_LONG ||
 	   (argv[2].a_type != A_FLOAT && argv[2].a_type != A_LONG)) return;
 	tableNum = atom_getlong(&argv[0]);
 	index = atom_getlong(&argv[1]);
 	val = (float)(argv[2].a_type == A_FLOAT ? atom_getfloat(&argv[2]) : atom_getlong(&argv[2]));
 	if(index < 0) return;
-	
+
 	{
 		ScopedLock k(cso->m_lock);
 		if(cso->m_compiled && !cso->m_performanceFinished)
@@ -1206,7 +1207,7 @@ void csound_wsidx(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 			result = ct.Set(tableNum, index, val);
 		}
 	}
-	
+
 	switch(result)
 	{
 	case 1:	object_error(x->m_obj, "\"wsidx\" failed because table #%d doesn't exist.", tableNum);
@@ -1225,7 +1226,7 @@ void csound_run(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 	int i, result;
 	char tmp[MAX_STRING_LENGTH];
 	char *args[MAX_ARGS];
-	
+
 	if(argc >= MAX_ARGS)
 	{
 		object_error(x->m_obj, "Too many arguments for \"run\". MAX_ARGS = %d", MAX_ARGS);
@@ -1252,14 +1253,14 @@ void csound_run(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 			break;
 		}
 	}
-	
+
 	args[argc] = NULL;
-	
+
 	cso->SetCurDir();
 
 	result = csoundRunCommand((const char * const *)args, 1);
 	if(result < 0) object_error(x->m_obj, "'run' command error: %d", result);
-	
+
 	// Free the arguments.
 	for(i=0; i<argc; i++) free(args[i]);
 }
@@ -1288,7 +1289,7 @@ void csound_run(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 			break;
 		case A_SYM:
 			strncpy(tmp, argv[i].a_w.w_sym->s_name, MAX_STRING_LENGTH-1);
-			if(hasSpace(tmp)) 
+			if(hasSpace(tmp))
 			{
 				addQuotes(tmp, tmp2, MAX_STRING_LENGTH);
 				strcpy(tmp, tmp2);
@@ -1303,7 +1304,7 @@ void csound_run(t_csound *x, t_symbol *s, short argc, t_atom *argv)
 			strncat(args, tmp, MAX_STRING_LENGTH-strlen(args)-1);
 		}
 	}
-	
+
 	cso->SetCurDir();
 	ShellExecute(NULL, "open", command, args, NULL, SW_SHOWNORMAL);
 }

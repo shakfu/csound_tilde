@@ -25,7 +25,6 @@
 #include "jpatcher_api.h"
 
 using namespace dvx::Patcher;
-using namespace std;
 
 Element::Element(t_object *o) : m_obj(o), m_name(), m_script(), m_new(false)
 {
@@ -38,7 +37,7 @@ Element::Element(t_object *o) : m_obj(o), m_name(), m_script(), m_new(false)
 	m_rect.b = m_rect.y + m_rect.height;
 }
 
-Element::Element(t_object *patcher, string script) : m_obj(NULL), m_name(), m_script(script), m_new(true)
+Element::Element(t_object *patcher, std::string script) : m_obj(NULL), m_name(), m_script(script), m_new(true)
 {
 	t_symbol *sym = NULL;
 	m_obj = newobject_sprintf(patcher, (char*)m_script.c_str());
@@ -91,7 +90,7 @@ Element* Scripter::AddElement(t_object *patcher, const std::string & s, bool add
 
 	// If we're creating elements in csound~'s patcher, and no patching_rect was specified
 	// in the script, check for collisions.
-	if(s.find("@patching_rect") == string::npos)
+	if(s.find("@patching_rect") == std::string::npos)
 	{
 		// Don't add x-axis offset to first element being created.
 		if(m_prev_rect.width != 0.0)
@@ -184,14 +183,14 @@ void Scripter::GetExistingElements()
 
 void Scripter::ParseCSD(const char * filename, bool tosub)
 {
-	ifstream infile;
+	std::ifstream infile;
 
 	try
 	{	
 		int line = 0;
 		bool storing = false;
 		size_t pos_start, pos_end;
-		string buf, elem;
+		std::string buf, elem;
 
 		if(!tosub)
 			m_subpatcher = m_patcher;
@@ -206,23 +205,23 @@ void Scripter::ParseCSD(const char * filename, bool tosub)
 		m_elements.clear();
 		memset(&m_prev_rect, 0, sizeof(t_rectex));
 		GetExistingElements();
-		infile.open(filename, ifstream::in);
+		infile.open(filename, std::ifstream::in);
 
 		while(infile.good())
 		{
 			++line;
 			getline(infile, buf);
-			pos_start = pos_end = string::npos;
+			pos_start = pos_end = std::string::npos;
 			pos_start = buf.find("<~>");
 			pos_end = buf.find("</~>");
 
-			if( (pos_start != string::npos && storing) ||
-			    (pos_start == string::npos && pos_end != string::npos && !storing) )
+			if( (pos_start != std::string::npos && storing) ||
+			    (pos_start == std::string::npos && pos_end != std::string::npos && !storing) )
 				object_error(m_obj, "Scripter::ParseCSD() : mismatched pairs of <~>, </~> detected (line %d).", line);
 			
 			if(storing)
 			{
-				if(pos_end == string::npos) // No <~> or </~> in this line. Add entire line to elem.
+				if(pos_end == std::string::npos) // No <~> or </~> in this line. Add entire line to elem.
 					elem += buf;
 				else                        // </~> occurs in this line. 
 				{	
@@ -233,10 +232,10 @@ void Scripter::ParseCSD(const char * filename, bool tosub)
 					elem.clear();
 				}
 			}
-			else if(!storing && pos_start != string::npos) // <~> occurs in this line.
+			else if(!storing && pos_start != std::string::npos) // <~> occurs in this line.
 			{
 				elem += buf.substr(pos_start, pos_end);
-				if(pos_end == string::npos)	storing = true;
+				if(pos_end == std::string::npos)	storing = true;
 				else                                       // </~> also occurs in this line.
 				{
 					elem.erase(0, elem.find_first_not_of("<~> "));

@@ -21,30 +21,52 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#ifndef _MESSAGE_BUFFER_H
+#define _MESSAGE_BUFFER_H
+
 #include "includes.h"
 #include "definitions.h"
+#include "Lock.h"
+#include <boost/ptr_container/ptr_deque.hpp>
 
-#ifndef _MEMORY_H
-#define _MEMORY_H
+namespace dvx {
 
-inline void* MemoryNew(int size)
+class message
 {
-	return malloc(size);
-}
+public:
+	enum { _NORMAL_MSG = 0, _WARNING_MSG, _ERROR_MSG };
 
-inline void* MemoryNewClear(int size)
+	message(int type, const std::string & s) : m_type(type), m_string(s) {}
+	message(int type, const char * s) : m_type(type), m_string(s) {}
+	~message() {}
+
+	int m_type;
+	std::string m_string;
+};
+
+class message_buffer
 {
-	return calloc(1, size);
-}
+	enum { _LIMIT = 100000 };
+	
+public:
+	message_buffer(t_object *o);
+	~message_buffer() {}
 
-inline void MemoryFree(void *ptr)
-{ 
-	assert(ptr);
-	free(ptr);
-}
+	void add(int type, const std::string & s);
+	void add(int type, const char * s);
+	void addv(int type, const char * s, ... );
+	void post();
 
-// Write len bytes from src to buffer at count offset.  If needed, grow buffer and
-// update bufferSize variable.
-int BufferWrite(byte **buffer, const void *src, int len, int *count, int *bufferSize);
+private:
+	t_object *m_obj;
+	boost::ptr_deque<message> m_q;
+	DEFAULT_LOCK_TYPE m_lock;
 
-#endif // _MEMORY_H
+#ifdef _DEBUG
+	size_t m_largest_size; // Check this at end of debugging session to see if DEFAULT_CAPACITY is reasonable.
+#endif
+};
+
+} // namespace dvx
+
+#endif //_MESSAGE_BUFFER_H

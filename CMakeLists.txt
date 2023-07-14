@@ -1,209 +1,70 @@
-# cmake -G "Visual Studio 15 2017 Win64" .. -DMAX_SDK_ROOT=C:\Users\rory\sourcecode\max-sdk-8.0.3 -DBOOST_DIR=C:/boost_1_71_0/boost_1_71_0 -DVCPKG_PACKAGES_DIR=C:\Users\rory\sourcecode\vcpkg\packages
+cmake_minimum_required(VERSION 3.19)
 
-if(MAX_SDK_ROOT)
-  message(STATUS "Building csound~ for Max/MSP.")
-  message(STATUS "MAX_SDK_ROOT: ${MAX_SDK_ROOT}")
+string(REGEX REPLACE "(.*)/" "" THIS_FOLDER_NAME "${CMAKE_CURRENT_SOURCE_DIR}")
+project(${THIS_FOLDER_NAME})
 
-SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "${BOOST_DIR}")
-SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "${BOOST_DIR}/lib")
+option(BUILD_UNIVERSAL "Build Universal Externals for macOS")
+option(BUILD_HYBRID "Build relocatable hybrid macOS bundle")
+option(BUILD_RELEASE "Build relocatable static macos bundle using vcpkg")
 
-if(NOT APPLE)
-  SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "${VCPKG_PACKAGES_DIR}/libsndfile_x64-windows-static/include")
-  SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "${VCPKG_PACKAGES_DIR}/libvorbis_x64-windows-static/include")
-  SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "${VCPKG_PACKAGES_DIR}/pthreads_x64-windows/include")
-  SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "C:/Program Files/Csound6_x64/include/csound")
-  SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "${VCPKG_PACKAGES_DIR}/libogg_x64-windows-static/include")
-  SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "${VCPKG_PACKAGES_DIR}/libflac_x64-windows-static/include")
-  
-  SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "${VCPKG_PACKAGES_DIR}/libsndfile_x64-windows-static/lib")
-  SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "${VCPKG_PACKAGES_DIR}/libvorbis_x64-windows-static/lib")
-  SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "${VCPKG_PACKAGES_DIR}/pthreads_x64-windows/lib")
-  SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "C:/Program Files/Csound6_x64/lib")
-  SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "${VCPKG_PACKAGES_DIR}/libogg_x64-windows-static/lib")
-  SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "${VCPKG_PACKAGES_DIR}/libflac_x64-windows-static/lib")
-
-  set(MSP_LIB_DIR
-    "${MAX_SDK_ROOT}/source/c74support/msp-includes/x64")
-  set(MAX_LIB_DIR
-    "${MAX_SDK_ROOT}/source/c74support/max-includes/x64")
-
+# use ccache if available
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    message(STATUS "Found ccache in ${CCACHE_PROGRAM}")
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
 endif()
 
-set(MAX_INCLUDES_DIR
-  "${MAX_SDK_ROOT}/source/c74support/max-includes")
-set(MSP_INCLUDES_DIR
-  "${MAX_SDK_ROOT}/source/c74support/msp-includes")
+if (APPLE)
+    if (${CMAKE_GENERATOR} MATCHES "Xcode")
+            if (${XCODE_VERSION} VERSION_LESS 10)
+                message(STATUS "Xcode 10 or higher is required. Please install from the Mac App Store.")
+                return ()
+            endif ()
+    endif ()
 
-find_package(Boost)
-
-if(APPLE)
-  find_library(CORE_SERVICES_FRAMEWORK CoreServices)
-  find_library(LAUNCH_SERVICES_FRAMEWORK LaunchServices PATHS ${CORE_SERVICES_FRAMEWORK}/Frameworks)
-  find_library(MAX_AUDIO_FRAMEWORK MaxAudioAPI PATHS ${MSP_INCLUDES_DIR})
-  find_library(MAX_API_FRAMEWORK MaxAPI PATHS ${MAX_INCLUDES_DIR})
-  find_library(LIBSNDFILE libsndfile PATHS ${MAX_INCLUDES_DIR})
-else()
-
-  find_library(MAX_AUDIO_FRAMEWORK MaxAudio PATHS ${MSP_LIB_DIR})
-  find_library(MAX_API_FRAMEWORK MaxAPI PATHS ${MAX_LIB_DIR})
-  find_library(LIBSNDFILE_LIBRARY libsndfile PATHS ${CMAKE_INCLUDE_PATH})
-  find_library(LIBOGG_LIBRARY ogg PATHS ${CMAKE_INCLUDE_PATH})
-  find_library(LIBVORBIS_LIBRARY vorbis PATHS ${CMAKE_INCLUDE_PATH})
-  find_library(LIBPTHREAD_LIBRARY pthreadVC3 PATHS ${CMAKE_INCLUDE_PATH})
-  find_library(LIBFLAC_LIBRARY flac PATHS ${CMAKE_INCLUDE_PATH})
-  find_library(LIBCSOUND_LIBRARY libcsound64 PATHS ${CMAKE_INCLUDE_PATH})
-endif()
-
-option(BUILD_MAX_CSOUND_TILDE "Build csound~ for Max/MSP" ON)
-
-
-if(APPLE)
-  check_deps(BUILD_MAX_CSOUND_TILDE
-    Boost_FOUND MAX_AUDIO_FRAMEWORK MAX_API_FRAMEWORK
-    #CORE_SERVICES_FRAMEWORK LIBSNDFILE_LIBRARY LAUNCH_SERVICES_FRAMEWORK)
-    CORE_SERVICES_FRAMEWORK LAUNCH_SERVICES_FRAMEWORK)
-else()
- 
-endif()
-
-#message("${MAX_AUDIO_FRAMEWORK} : ${MAX_API_FRAMEWORK} : ${CORE_SERVICES_FRAMEWORK} : ${LIBSNDFILE_LIBRARY}")
-
-if(BUILD_MAX_CSOUND_TILDE)
-
-set(max_csound_tilde_SRCS
-  src/Args.cpp
-  src/atom_buffer.cpp
-  src/channel.cpp
-  src/csound~.cpp
-  src/CsoundObject.cpp
-  src/CsoundTable.cpp
-  src/Lock.cpp
-  src/memory.cpp
-  src/message_buffer.cpp
-  src/midi.cpp
-  src/PatchScripter.cpp
-  src/sequencer.cpp
-  src/util.cpp)
-
-if(NOT APPLE)
-  list(APPEND max_csound_tilde_SRCS
-    src/dllmain_win.c)
-endif()
-
-set(max_csound_tilde_headers
-  src/Args.h
-  src/atom_buffer.h
-  src/channel.h
-  src/csound~.h
-  src/CsoundObject.h
-  src/CsoundTable.h
-  src/definitions.h
-  src/eksepshun.h
-  src/includes.h
-  src/Lock.h
-  src/max_headers.h
-  src/memory.h
-  src/message_buffer.h
-  src/midi.h
-  src/Parser.h
-  src/PatchScripter.h
-  src/sequencer.h
-  src/util.h)
-
-set(maxcs_SRCS "${max_csound_tilde_SRCS};${max_csound_tilde_headers}")
-
-#message("${maxcs_SRCS}")
-
-#set_source_files_properties(${maxcs_SRCS} PROPERTIES
-#                              COMPILE_FLAGS "-x objective-c++")
-
-if(APPLE)
-  set(MAX_OUTPUT_LIB "csound~.mxo")
-else()
-  set(MAX_OUTPUT_LIB "csound~")
-endif()
-
-add_library(${MAX_OUTPUT_LIB} SHARED ${maxcs_SRCS})
-target_link_libraries(${MAX_OUTPUT_LIB}
-  ${MAX_API_FRAMEWORK} ${MAX_AUDIO_FRAMEWORK}
-  #${LIBSNDFILE_LIBRARY} ${CSOUNDLIB})
-  ${CSOUNDLIB})
-include_directories(${MAX_INCLUDES_DIR})
-include_directories(${MSP_INCLUDES_DIR})
-include_directories(${Boost_INCLUDE_DIRS})
-
-
-if(NOT APPLE)
-  set_target_properties(${MAX_OUTPUT_LIB}
-	  PROPERTIES LINK_FLAGS "-static-libstdc++ -static-libgcc")
-  include_directories(${MAX_INCLUDES_DIR})
-  include_directories(${MSP_INCLUDES_DIR})
-  include_directories(${Boost_INCLUDE_DIRS})
-  link_directories(${CMAKE_LIBRARY_PATH})
-endif()
-
-if(APPLE)
-
-    include_directories(${CORE_SERVICES_FRAMEWORK}/Frameworks/CarbonCore.framework/Headers)
-    include_directories(${LAUNCH_SERVICES_FRAMEWORK}/Headers)
-    target_link_libraries(${MAX_OUTPUT_LIB} ${CORE_SERVICES_FRAMEWORK})
-    set_target_properties(${MAX_OUTPUT_LIB} PROPERTIES FRAMEWORK YES)
-
-
-    if(${CMAKE_GENERATOR} STREQUAL "Xcode")
-      set(CSMXO_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE})
-    else()
-      set(CSMXO_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
+    if (NOT CMAKE_OSX_ARCHITECTURES)
+        if(BUILD_UNIVERSAL)
+            set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "macOS architecture" FORCE)
+        else()
+            set(CMAKE_OSX_ARCHITECTURES ${CMAKE_SYSTEM_PROCESSOR} CACHE STRING "macOS architecture" FORCE)
+        endif()
+        message("CMAKE_OSX_ARCHITECTURES set to ${CMAKE_OSX_ARCHITECTURES}")
     endif()
 
-    set(CSMXO_DIR ${CSMXO_OUT_DIR}/csound~.mxo)
-
-    add_custom_command(TARGET ${MAX_OUTPUT_LIB}
-      POST_BUILD
-      COMMAND rm ARGS -rf ${CSMXO_DIR})
-
-    add_custom_command(TARGET ${MAX_OUTPUT_LIB}
-      POST_BUILD
-      COMMAND cp ARGS -r ${CSMXO_OUT_DIR}/csound~.mxo.framework ${CSMXO_DIR})
-
-    add_custom_command(TARGET ${MAX_OUTPUT_LIB}
-      POST_BUILD
-      COMMAND mv ARGS -f ${CSMXO_DIR}/csound~.mxo  ${CSMXO_DIR}/csound~)
-
-    add_custom_command(TARGET ${MAX_OUTPUT_LIB}
-      POST_BUILD
-      COMMAND sed ARGS 's/csound~.mxo/csound~/g' ${CSMXO_DIR}/Resources/Info.plist > ${CSMXO_DIR}/Resources/Info2.plist)
-
-    add_custom_command(TARGET ${MAX_OUTPUT_LIB}
-      POST_BUILD
-      COMMAND mv ARGS -f ${CSMXO_DIR}/Resources/Info2.plist ${CSMXO_DIR}/Resources/Info.plist)
-
-    set(MAX_LINK_FLAGS "-Wl,-U,_atom_getfloat,-U,_atom_getlong,-U,_atom_getsym,-U,_atom_gettype,-U,_atom_setfloat,-U,_atom_setlong,-U,_atom_setobj,-U,_atom_setsym,-U,_attr_addfilter_clip,-U,_attr_args_process,-U,_attr_offset_new,-U,_bangout,-U,_class_addattr,-U,_class_addmethod,-U,_class_attr_addattr_format,-U,_class_attr_addattr_parse,-U,_class_attr_get,-U,_class_new,-U,_class_register,-U,_clock_fdelay,-U,_clock_new,-U,_clock_unset,-U,_defer_low,-U,_freeobject,-U,_gensym,-U,_gensym_tr,-U,_intout,-U,_jbox_get_nextobject,-U,_jbox_get_object,-U,_jpatcher_get_firstobject,-U,_listout,-U,_locatefile_extended,-U,_newobject_sprintf,-U,_object_alloc,-U,_object_attr_get_rect,-U,_object_attr_getsym,-U,_object_attr_set_rect,-U,_object_error,-U,_object_method_imp,-U,_object_method_typed,-U,_object_obex_lookup,-U,_object_post,-U,_object_warn,-U,_outlet_bang,-U,_outlet_int,-U,_outlet_list,-U,_outlet_new,-U,_path_getdefault,-U,_path_topathname,-U,_path_topotentialname,-U,_post,-U,_object_method")
-
-    # Ugh, adding this here as using the long one from C74's
-    # SDK causes Xcode 5 to crash
-    # See if this will allow csound~ to pickup csound's libsndfile symbols at runtime...
-    set_target_properties(csound~.mxo PROPERTIES LINK_FLAGS
-      "${MAX_LINK_FLAGS} -undefined dynamic_lookup")
-
-else()
-
-  set_target_properties(${MAX_OUTPUT_LIB} PROPERTIES
-    COMPILE_FLAGS "-DWIN_VERSION -DWIN_EXT_VERSION -D_WINDOWS"
-    SUFFIX .mxe64
+    # if homebrew is available get prefix
+    execute_process(
+        COMMAND brew --prefix
+        OUTPUT_VARIABLE HOMEBREW_PREFIX
+        OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-
-  target_link_libraries(${MAX_OUTPUT_LIB}  ws2_32
-    ${LIBSNDFILE_LIBRARY} ${LIBFLAC_LIBRARY} ${LIBOGG_LIBRARY} ${LIBCSOUND_LIBRARY} ${LIBVORBIS_LIBRARY} ${LIBPTHREAD_LIBRARY})
-    include_directories(${CMAKE_INCLUDE_PATH})
-    include_directories(${MSP_INCLUDES_DIR})
-    include_directories(${MAX_INCLUDES_DIR})
-    include_directories(${Boost_INCLUDE_DIRS})
-endif(APPLE)
-
+    if(DEFINED HOMEBREW_PREFIX)
+        set(HAS_HOMEBREW 1)
+    endif()
 endif()
 
-else()
-  message(STATUS "Not building csound~ for Max/MSP")
-  message(STATUS "MAX_SDK_ROOT is not defined.")
-endif()
+MACRO(SUBDIRLIST result curdir)
+  FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)
+  SET(dirlist "")
+  FOREACH(child ${children})
+    IF(IS_DIRECTORY ${curdir}/${child})
+        LIST(APPEND dirlist ${child})
+    ENDIF()
+  ENDFOREACH()
+  SET(${result} ${dirlist})
+ENDMACRO()
+
+# Generate a project for every folder in the "source/category" folder
+SUBDIRLIST(CATEGORY_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/source)
+foreach (cat_dir ${CATEGORY_DIRS})
+  SUBDIRLIST(PROJECT_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/source/${cat_dir})
+  foreach (project_dir ${PROJECT_DIRS})
+    set(project_path ${CMAKE_CURRENT_SOURCE_DIR}/source/${cat_dir}/${project_dir})
+    message("checking in: ${project_path}")
+    if (EXISTS "${project_path}/CMakeLists.txt")
+      message("Generating: ${project_dir}")
+      add_subdirectory(${project_path})
+    endif ()
+  endforeach ()
+endforeach ()
+
+
