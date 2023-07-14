@@ -27,11 +27,11 @@ A Max/MSP external for Csound.
 
 - Build variants:
 
-	- **local** build: non-relocatable, dynamically linked to local csound library or framework
+    - **local** build: non-relocatable, dynamically linked to local csound library or framework
 
-	- **hybrid** build: relocatable with static csound + dynamic dependencies
+    - **hybrid** build: relocatable with static csound + dynamic dependencies
 
-	- **release** build: relocatable 100% static build using vcpkg. Best for both macOS and Windows
+    - **release** build: relocatable 100% static build using vcpkg. Best for both macOS and Windows
 
 
 
@@ -42,20 +42,21 @@ In increasing order of build times:
 
 variant    | linking  | relocatable   | pkg manager        | build time (x)
 :--------- | :------- | :-----------: | :----------------- | :--------------:
-local      | shared   | no     		  | local, homebrew    | 1x
-hybrid     | both     | yes     	  | source, homebrew   | 50x
-release    | static   | yes			  | vcpkg			   | 52x
+local      | shared   | no            | local, homebrew    | 1x
+hybrid     | both     | yes           | source, homebrew   | 50x
+release    | static   | yes           | vcpkg              | 52x
 
 
 ### Local Build
 
-This is the default.
+The default build which dynamically links to the local installation of libcsnd
 
-Assumes:
+Assumes dependencies are installed locally:
 
-	- local installation of Csound in $HOME/Library/Frameworks
+- `brew install libsndfile boost`
 
-	- `brew install libsndfile boost`
+- Local installation of Csound in $HOME/Library/Frameworks (for macOS case)
+
 
 ```bash
 make
@@ -63,9 +64,9 @@ make
 
 ###  Relocatable Hybrid Build
 
-Assumes:
+Assumes dependencies are installed locally:
 
-	- `brew install libsndfile boost`
+- `brew install libsndfile boost`
 
 ```
 make hybrid

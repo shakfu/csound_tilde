@@ -4,6 +4,16 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-pretarget.cmak
 # csound~
 #############################################################
 
+
+# list(APPEND CMAKE_PREFIX_PATH
+#     "/usr/local"
+#     "/usr/opt"
+#     "$ENV{HOME}/Library/Frameworks"
+#     $<${HAS_HOMEBREW}:${HOMEBREW_PREFIX}>
+# )
+
+message(STATUS "CMAKE_PREFIX_PATH:  ${CMAKE_PREFIX_PATH}")
+
 include_directories( 
     "${MAX_SDK_INCLUDES}"
     "${MAX_SDK_MSP_INCLUDES}"
