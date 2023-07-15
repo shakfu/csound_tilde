@@ -88,10 +88,7 @@ elseif(WIN32)
     # added windows-specific source
     list(APPEND PROJECT_SRC ${SRC_DIR}/dllmain_win.c)
 
-    if(BUILD_RELEASE)
-        message(FATAL_ERROR "no windows support yet")
-        include(${SCRIPTS_DIR}/windows_release.cmake)
-    endif()
+    include(${SCRIPTS_DIR}/windows_release.cmake)
 
 else()
     message(FATAL_ERROR "can only build on macOS or windows")

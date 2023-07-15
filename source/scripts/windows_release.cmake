@@ -34,6 +34,11 @@ target_include_directories(${PROJECT_NAME}
     "C:/Program Files/Csound6_x64/include/csound"
 )
 
+# target_compile_options(${PROJECT_NAME}
+#     PUBLIC
+#     "/MT"
+# )
+
 
 target_compile_definitions(${PROJECT_NAME}
     PUBLIC
