@@ -1,7 +1,8 @@
 
-set(VCPKG_ROOT ${CMAKE_BINARY_DIR}/deps/vcpkg)
-set(VCPKG_PREFIX ${VCPKG_ROOT}/installed/x64-osx)
 set(DEPS ${CMAKE_BINARY_DIR}/deps)
+set(VCPKG_ROOT ${DEPS}/vcpkg)
+set(VCPKG_PREFIX ${VCPKG_ROOT}/installed/x64-osx)
+
 set(CSOUND_LIBRARY ${DEPS}/csound-build/libCsoundLib64.a)
 set(CSOUND_HEADER_PATH ${DEPS}/csound-build/CsoundLib64.framework/Headers)
 set(EXTERNAL_PATH {CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${PROJECT_NAME}.mxo)
@@ -33,24 +34,13 @@ target_link_directories(${PROJECT_NAME}
     ${VCPKG_PREFIX}/lib
 )
 
-# set_target_properties(${PROJECT_NAME} PROPERTIES FRAMEWORK YES)
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
     ${CSOUND_LIBRARY}
-    ${DEPS/libcsnd6.a}
+    # ${DEPS/libcsnd6.a}
     ${VCPKG_PREFIX}/lib/libFLAC++.a
     ${VCPKG_PREFIX}/lib/libFLAC.a
-    # ${VCPKG_PREFIX}/lib/libboost_atomic.a
-    # ${VCPKG_PREFIX}/lib/libboost_chrono.a
-    # ${VCPKG_PREFIX}/lib/libboost_container.a
-    # ${VCPKG_PREFIX}/lib/libboost_date_time.a
-    # ${VCPKG_PREFIX}/lib/libboost_exception.a
-    # ${VCPKG_PREFIX}/lib/libboost_regex.a
-    # ${VCPKG_PREFIX}/lib/libboost_serialization.a
-    # ${VCPKG_PREFIX}/lib/libboost_system.a
-    # ${VCPKG_PREFIX}/lib/libboost_thread.a
-    # ${VCPKG_PREFIX}/lib/libboost_wserialization.a
     ${VCPKG_PREFIX}/lib/libmp3lame.a
     ${VCPKG_PREFIX}/lib/libmpg123.a
     ${VCPKG_PREFIX}/lib/libogg.a

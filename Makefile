@@ -43,7 +43,7 @@ $(VCPKG):
 	@bash $(SCRIPTS)/install_vcpkg.sh
 
 release: clean-externals $(LIBCSND6) $(VCPKG)
-	@mkdir -p build && cd build && cmake -GXcode -DENABLE_VCPKG=ON  .. && \
+	@mkdir -p build && cd build && cmake -GXcode -DBUILD_RELEASE=ON -DENABLE_VCPKG=ON  .. && \
 		cmake --build . --config '$(CONFIG)'
 
 windows: clean-externals
