@@ -25,6 +25,10 @@
 #include "definitions.h"
 #include <string>
 
+#ifdef _WINDOWS
+#include <shellapi.h> // for ShellExecute
+#endif
+
 #ifndef _UTIL_H
 #define _UTIL_H
 

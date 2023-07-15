@@ -8,3 +8,4 @@
 
 - [x] use of `auto_ptr`, which was removed in c++17, in `csound~.cpp`: converted to `std::unique_ptr`.
 
+- 

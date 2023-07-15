@@ -61,6 +61,8 @@ set(PROJECT_HEADERS
 )
 
 if(APPLE)
+    message(STATUS "building on macOS")
+
     set(CMAKE_OSX_DEPLOYMENT_TARGET 10.13 CACHE STRING 
         "override default MACOS_DEPLOYMENT_TARGET" FORCE)
 
@@ -81,8 +83,7 @@ if(APPLE)
     endif()
 
 elseif(WIN32)
-    
-    message(STATUS "building on windows")
+    message(STATUS "building on Windows")
 
     # added windows-specific source
     list(APPEND PROJECT_SRC ${SRC_DIR}/dllmain_win.c)
