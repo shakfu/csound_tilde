@@ -7,7 +7,7 @@ vars:
   DEPS: build/deps
   CONFIG: "Release" # or Debug
   CSOUND_EXTERNAL: externals/csound~.mxo
-  VCPKG_ROOT: "{{.DEPS}}/vcpkg"
+  VCPKG_ROOT: "{{.DEPS}}/vcp kg"
   VCPKG_CMAKE: "{{.VCPKG_ROOT}}/scripts/buildsystems/vcpkg.cmake"
   PY_VER:
     sh: "python3 -c 'import sysconfig; print(sysconfig.get_python_version())'"
@@ -17,14 +17,6 @@ env:
 
 
 tasks:
-  hello:
-    cmds:
-      - echo 'Hello World from Task!'
-      - echo "{{.VCPKG_CMAKE}}"
-      - echo "PY_VER {{.PY_VER}}"
-      - echo $GREETING
-    silent: true
-
   build:
     platforms: [darwin]
     deps: [clean-externals]
@@ -34,6 +26,11 @@ tasks:
         cd build
         cmake -GXcode ..
         cmake --build . --config '{{.CONFIG}}'
+
+  clean:
+    cmds:
+      - task: clean-externals
+      - rm -rf build
 
   clean-externals:
     cmds:
