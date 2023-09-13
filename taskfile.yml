@@ -1,0 +1,96 @@
+# uses task, a multi-platform make replacement (https://taskfile.dev)
+
+version: '3'
+
+vars:
+  SCRIPTS: source/scripts
+  DEPS: build/deps
+  CONFIG: "Release" # or Debug
+  CSOUND_EXTERNAL: externals/csound~.mxo
+  VCPKG_ROOT: "{{.DEPS}}/vcpkg"
+  VCPKG_CMAKE: "{{.VCPKG_ROOT}}/scripts/buildsystems/vcpkg.cmake"
+  PY_VER:
+    sh: "python3 -c 'import sysconfig; print(sysconfig.get_python_version())'"
+
+env:
+  GREETING: good morning
+
+
+tasks:
+  hello:
+    cmds:
+      - echo 'Hello World from Task!'
+      - echo "{{.VCPKG_CMAKE}}"
+      - echo "PY_VER {{.PY_VER}}"
+      - echo $GREETING
+    silent: true
+
+  build:
+    platforms: [darwin]
+    deps: [clean-externals]
+    cmds:
+      - |
+        mkdir -p build
+        cd build
+        cmake -GXcode ..
+        cmake --build . --config '{{.CONFIG}}'
+
+  clean-externals:
+    cmds:
+      - rm -rf externals
+
+  hybrid:
+    deps:
+      - clean-externals
+      - csound-external
+      - dylib-bundler
+    cmds:
+      - bash {{.SCRIPTS}}/fix_bundle.sh
+
+  vcpkg:
+    cmds:
+      - bash {{.SCRIPTS}}/install_vcpkg.sh
+
+  libcsnd6:
+    cmds:
+      - bash {{.SCRIPTS}}/install_csound.sh
+
+  csound-external:
+    platforms: [darwin]
+    deps: [libcsnd6]
+    cmds:
+      - |
+        mkdir -p build
+        cd build
+        cmake -GXcode -DBUILD_HYBRID=ON .. 
+        cmake --build . --config '{{.CONFIG}}'
+
+  dylib-bundler:
+    platforms: [darwin]
+    cmds:
+      - bash {{.SCRIPTS}}/install_macdylibbundler.sh
+
+  release:
+    platforms: [darwin]
+    deps:
+      - clean-externals
+      - libcsnd6
+      - vcpkg
+    cmds:
+      - |
+        mkdir -p build
+        cd build
+        cmake -GXcode -DBUILD_RELEASE=ON -DENABLE_VCPKG=ON  ..
+        cmake --build . --config '{{.CONFIG}}'
+
+  build-windows:
+    platforms: [windows]
+    deps:
+      - clean-externals
+    cmds:
+      - |
+        mkdir -p build
+        cd build
+        cmake -GNinja -DCMAKE_TOOLCHAIN_FILE={{.VCPKG_CMAKE}} ..
+        cmake --build . --config '{{.CONFIG}}'
+
